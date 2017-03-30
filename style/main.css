@@ -1,0 +1,114 @@
+html, body {
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    color: #444;
+}
+
+#mapDiv {
+    position: absolute;
+    top: 50px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    margin: 0;
+    padding: 0; 
+}
+
+.navbar-fixed-top {
+    height: 50px;
+    border: 0;
+    display: flex;
+    flex-flow: row nowrap;
+    justify-content: flex-start;
+    align-content: stretch;
+    background-color: #0079c1;
+}
+
+.navbar-title {
+    order: 1;
+    flex-grow: 1;
+    margin: 0;
+    line-height: 1.5;
+    display: flex;
+    align-items: center;
+    color: #f8f8f8;
+    padding-left: 25px;
+}
+
+.navbar-title > .title-main {
+    flex-shrink: 0;
+    margin: 0;
+    padding: 1px 0 2px;
+    overflow: hidden;
+    font-size: 22px;
+    font-weight: 400;
+}
+
+.navbar-title > .title-divider {
+    position: relative;
+    top: 0;
+    left: 0;
+    height: 100px;
+    margin: 0 15px;
+    transform: scale(.7,.3);
+    transform-origin: left;
+    border-left: 1px solid;
+    /*color: #f8f8f8;*/
+    opacity: .75;
+}
+
+.navbar-title > .title-sub {
+    display: inline-block;
+    margin: 0;
+    padding: 1px 0 0;
+    overflow: hidden;
+    font-size: 14px;
+    font-weight: 400;
+    /*color: #f8f8f8;*/
+}
+
+.loading-indicator {
+    /* Loading status */
+    display    : none;
+    height     : 100%;
+    width      : 100%;
+    z-index    : 500;
+    position   : absolute;
+    top        : 0;
+    left       : 0;
+    overflow   : hidden;
+    background : #fff;
+}
+
+.app-loading .loading-indicator,
+.app-error .loading-indicator {
+    /* Show this class when loading or error */
+    pointer-events : none;
+    display        : inline-flex;
+    cursor         : wait;
+}
+
+.app-loading .loading-indicator {
+    /* Loading image */
+    background : url(../images/loading.gif) no-repeat center center;
+}
+
+.bottom-pane {
+    position: absolute;
+    width: 100%;
+    height: 300px;
+    bottom: 0;
+    left: 0;
+    background-color: #fff;
+    z-index: 1000;
+    display: none;
+}
+
+@media (max-width: 767px){
+    .hidden-xs {
+        display: none!important;
+    }
+}
+
