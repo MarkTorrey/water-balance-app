@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1,user-scalable=no">
+    <title>Simple Image Service</title>
+    <link rel="stylesheet" href="https://js.arcgis.com/3.20/esri/css/esri.css" />
+
+    <style>
+      html, body, #map { height: 100%; width: 100%; margin: 0; padding: 0; }
+    </style>
+
+    <script src="https://js.arcgis.com/3.20/"></script>
+    <script>
+      var map;
+      require([
+        "esri/map",
+        "esri/layers/ArcGISImageServiceLayer", 
+        "esri/layers/ImageServiceParameters",
+
+        "esri/arcgis/Portal", 
+        "esri/arcgis/OAuthInfo", 
+        "esri/IdentityManager",
+        "esri/arcgis/utils",
+        "esri/TimeExtent",
+
+        "esri/layers/MosaicRule",
+        "esri/layers/DimensionalDefinition",
+
+        "dojo/dom-class",
+        "dojo/_base/connect"
+    ], function (
+
+        Map, ArcGISImageServiceLayer, ImageServiceParameters,
+        arcgisPortal, OAuthInfo, esriId,
+        arcgisUtils, TimeExtent,
+        MosaicRule, DimensionalDefinition,
+
+        domClass,
+        connect
+    ){
+
+        signInToArcGISPortal();
+
+        map = new Map("map", {
+          basemap: "topo",
+          center: [-79.40, 43.64],
+          zoom: 3
+        });
+
+        updateMapTimeInfo(951912000000,954586800000);
+
+        var imageServiceLayer = new ArcGISImageServiceLayer("https://earthobs2dev.arcgis.com/arcgis/rest/services/GLDAS_Precipitation/ImageServer/", {
+          opacity: 1
+        });
+        map.addLayer(imageServiceLayer);
+
+        // setZExtentForImageLayer(imageServiceLayer);
+
+
+        function updateMapTimeInfo(startTime, endTime){
+
+            // console.log(startTime, endTime);
+
+            var timeExtent = new TimeExtent();
+            timeExtent.startTime = new Date(startTime);
+            timeExtent.endTime = new Date(endTime);
+
+            console.log(timeExtent);
+
+            map.setTimeExtent(timeExtent);
+        }
+
+        function setZExtentForImageLayer(layer){
+            var mr = new MosaicRule({
+                "method" : "esriMosaicNone",
+                "ascending" : true,
+                "operation" : "MT_SUM"
+            });
+            mr.multidimensionalDefinition = [];
+            mr.multidimensionalDefinition.push(new DimensionalDefinition({
+                variableName: "",
+                dimensionName: "StdZ",
+                values: [-2, 0]
+            }));
+
+            layer.mosaicRule = mr;
+        }
+
+
+        function signInToArcGISPortal(){
+
+            var info = new OAuthInfo({
+                appId: "T2NYnYffgXujL6DV",
+                popup: false
+            });    
+            esriId.registerOAuthInfos([info]);   
+            
+            new arcgisPortal.Portal(info.portalUrl).signIn()
+            .then(function(){
+                console.log('you are logged in');
+            })     
+            .otherwise(
+                function (error){
+                    console.log("Error occurred while signing in: ", error);
+                }
+            );    
+        }
+        
+      });
+    </script>
+  </head>
+  
+  <body>
+    <div id="map"> </div>
+  </body>
+
+</html>
