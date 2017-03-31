@@ -16,6 +16,7 @@ require([
     "esri/layers/MosaicRule",
     "esri/layers/DimensionalDefinition",
 
+    "dojo/on",
     "dojo/dom-class",
     "dojo/_base/connect"
 ], function (
@@ -26,8 +27,7 @@ require([
     arcgisUtils, TimeExtent,
     MosaicRule, DimensionalDefinition,
 
-    domClass,
-    connect
+    on, domClass, connect
 ){
     // var app = new Application();
 
@@ -54,11 +54,15 @@ require([
 
         app.map.on("update-end", function () {
           domClass.remove(document.body, "app-loading");
-
-          var visibleLayer = getWebMapLayerByVisibility();
-
-          console.log(visibleLayer);
         });
+
+        // app.map.on("click", getImageLayerDataByLocation);
+        
+        // identifyTask = new ImageServiceIdentifyTask(IMAGE_LAYER_URL);
+        // identifyTaskParams = new ImageServiceIdentifyParameters();
+            
+        // identifyTaskParams.returnCatalogItems = true;
+        // identifyTaskParams.returnGeometry = false;
 
         initializeMapTimeExtent();
     });
@@ -76,6 +80,8 @@ require([
         setZExtentForImageLayer(visibleLayer);
 
         updateMapTimeInfo(startTime, endTime);
+
+        console.log(visibleLayer);
     }
 
     function setZExtentForImageLayer(layer){
@@ -91,7 +97,7 @@ require([
             values: [-2, 0]
         }));
 
-        layer.mosaicRule = mr;
+        layer.layerObject.setMosaicRule(mr);
     }
 
     function getWebMapLayerByName(){
