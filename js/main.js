@@ -27,7 +27,8 @@ require([
 
     "dojo/on",
     "dojo/dom-class",
-    "dojo/_base/connect"
+    "dojo/_base/connect",
+    "dojo/Deferred"
 ], function (
     uiConfig, initUI, Application,
 
@@ -38,7 +39,7 @@ require([
     MosaicRule, DimensionalDefinition,
     ImageServiceIdentifyTask, ImageServiceIdentifyParameters,
 
-    on, domClass, connect
+    on, domClass, connect, Deferred
 ){
     // Enforce strict mode
     'use strict';
@@ -50,8 +51,8 @@ require([
 
     var app = {};
 
-    var imageServiceIdentifyTask;
-    var imageServiceIdentifyTaskParams; 
+    // var imageServiceIdentifyTask;
+    // var imageServiceIdentifyTaskParams; 
 
     signInToArcGISPortal();
 
@@ -60,6 +61,13 @@ require([
         app.map = response.map;
 
         app.webMapItems = response.itemInfo.itemData;
+
+        //app.operationalLayersURL contains image layer names and urls that will be used to do identifyTasks
+        app.operationalLayersURL = getOperationalLayersURL(app.webMapItems);
+
+        //display chart with soil moisture and snowpack data if app.isWaterStorageChartVisible is true; 
+        //otherwise, show chart with precip and evapotranspiration
+        app.isWaterStorageChartVisible = false;
 
         connect.disconnect(response.clickEventHandle);
 
@@ -72,40 +80,137 @@ require([
         });
 
         app.map.on("click", getImageLayerDataByLocation);
-        
-        imageServiceIdentifyTask = new ImageServiceIdentifyTask("https://earthobs2.arcgis.com/arcgis/rest/services/GLDAS_SoilMoisture/ImageServer");
-        imageServiceIdentifyTaskParams = new ImageServiceIdentifyParameters();
-            
-        imageServiceIdentifyTaskParams.returnCatalogItems = true;
-        imageServiceIdentifyTaskParams.returnGeometry = false;
 
-        initializeMapTimeExtent();
+        
+        initializeMapTimeAndZExtent();
     });
 
     function getImageLayerDataByLocation(event){
 
         var identifyTaskInputGeometry = event.mapPoint;
 
+        var identifyTaskURLs = getIdentifyTaskURLs(); 
+
+        var scatterplotChartData = [];
+
         addPointToMAp(identifyTaskInputGeometry);
 
-        executeIdentifyTask(identifyTaskInputGeometry);
+        executeIdentifyTask(identifyTaskInputGeometry, identifyTaskURLs[0].url, identifyTaskURLs[0].title).then(function(results){
+            scatterplotChartData.push(results);
+
+            executeIdentifyTask(identifyTaskInputGeometry, identifyTaskURLs[1].url, identifyTaskURLs[1].title).then(function(results){
+                scatterplotChartData.push(results);
+
+                console.log(scatterplotChartData);
+            });
+
+        });
+
     }
 
-    function executeIdentifyTask(inputGeometry) {
+    function executeIdentifyTask(inputGeometry, identifyTaskURL, imageServiceTitle) {
+
+        var deferred = new Deferred();
+
+        var imageServiceIdentifyTask = new ImageServiceIdentifyTask(identifyTaskURL);
+        var imageServiceIdentifyTaskParams = new ImageServiceIdentifyParameters();
+            
+        imageServiceIdentifyTaskParams.returnCatalogItems = true;
+        imageServiceIdentifyTaskParams.returnGeometry = false;
 
         // Set the geometry to the location of the view click
         imageServiceIdentifyTaskParams.geometry = inputGeometry;
 
         imageServiceIdentifyTaskParams.timeExtent = getTimeExtent(953121600000, 1481803200000);
 
-        imageServiceIdentifyTaskParams.mosaicRule = getMosaicRule();
+        imageServiceIdentifyTaskParams.mosaicRule = getMosaicRule(imageServiceTitle);
 
         imageServiceIdentifyTask.execute(imageServiceIdentifyTaskParams).then(function(response) {
-            console.log(response);
+            // console.log(response);
+            var processedResults = processIdentifyTaskResults(response, imageServiceTitle);
+            deferred.resolve(processedResults);
         });
+
+        return deferred.promise;
     }
 
-    function getMosaicRule(){
+    function processIdentifyTaskResults(results, imageServiceTitle){
+
+        var processedResults = {
+            "title": imageServiceTitle,
+            "data": []
+        };
+
+        if(imageServiceTitle === "Snowpack" || imageServiceTitle === "Evapotranspiration"){
+            
+            for(var i = 0, len = results.properties.Values.length; i < len; i++){
+
+                var time = results.catalogItems.features[i].attributes.StdTime;
+                var value = results.properties.Values[i];
+
+                processedResults.data.push({stdTime: time, value: +value});
+            }
+        } 
+        else if (imageServiceTitle === "Precipitation"){
+            // sum rain and snow to get total precipitation of the month
+            for(var i = 0, len = results.properties.Values.length; i < len; i++){
+
+                if(!(i % 2)){
+                    var time = results.catalogItems.features[i].attributes.StdTime;
+                    var value = +results.properties.Values[i] + +results.properties.Values[i + 1];
+
+                    processedResults.data.push({stdTime: time, value: value});
+                }
+            }
+        }
+        else if (imageServiceTitle === "Soil Moisture"){
+            
+        }   
+
+        return processedResults;     
+    }
+
+    function getIdentifyTaskURLs(){
+
+        var urls = [];
+
+        for (var i = 0, len = app.operationalLayersURL.length; i < len; i++){
+
+            if(app.isWaterStorageChartVisible){
+                if(app.operationalLayersURL[i].title === "Soil Moisture" || app.operationalLayersURL[i].title === "Snowpack") {
+                    urls.push(app.operationalLayersURL[i]);
+                } 
+            } else {
+                if(app.operationalLayersURL[i].title === "Precipitation" || app.operationalLayersURL[i].title === "Evapotranspiration") {
+                    urls.push(app.operationalLayersURL[i]);
+                } 
+            }
+        }
+
+        return urls;
+    }
+
+    // function getMosaicRule(){
+
+    //     var mosaicRule = new MosaicRule();
+
+    //     mosaicRule.method = MosaicRule.METHOD_NONE;
+
+    //     mosaicRule.operation = MosaicRule.OPERATION_SUM;
+
+    //     mosaicRule.multidimensionalDefinition = [];
+
+    //     mosaicRule.multidimensionalDefinition.push(new DimensionalDefinition({
+    //         variableName: "",
+    //         dimensionName: "StdZ",
+    //         values: [[-2, 0]],
+    //         isSlice: false
+    //     }));
+
+    //     return mosaicRule;
+    // }
+
+    function getMosaicRule(imageServiceTitle){
 
         var mosaicRule = new MosaicRule();
 
@@ -113,14 +218,7 @@ require([
 
         mosaicRule.operation = MosaicRule.OPERATION_SUM;
 
-        mosaicRule.multidimensionalDefinition = [];
-
-        mosaicRule.multidimensionalDefinition.push(new DimensionalDefinition({
-            variableName: "",
-            dimensionName: "StdZ",
-            values: [[-2, 0]],
-            isSlice: false
-        }));
+        mosaicRule.where = "tag='Actual'"
 
         return mosaicRule;
     }
@@ -147,7 +245,7 @@ require([
         app.map.graphics.add(pointGraphic);
     }
 
-    function initializeMapTimeExtent(){
+    function initializeMapTimeAndZExtent(){
 
         var visibleLayer = getWebMapLayerByVisibility();
 
@@ -161,7 +259,7 @@ require([
 
         updateMapTimeInfo(startTime, endTime);
 
-        console.log(visibleLayer);
+        console.log(visibleLayerTimeInfo.timeExtent[0], visibleLayerTimeInfo.timeExtent[1]);
     }
 
     function setZExtentForImageLayer(layer){
@@ -186,8 +284,6 @@ require([
 
     function getWebMapLayerByVisibility(){
 
-        // console.log(app.webMapItems.operationalLayers);
-
         var visibleLayers = app.webMapItems.operationalLayers.filter(function(d){
             return d.visibility === true;
         });
@@ -195,12 +291,25 @@ require([
         return visibleLayers[0];
     }
 
+    function getOperationalLayersURL(webMapItems){
+
+        var operationalLayersURL = webMapItems.operationalLayers.map(function(d){
+            return {
+                "title": d.title,
+                "url": d.url
+            };
+        });
+
+        return operationalLayersURL;
+    }
+
     function getImageLayerTimeInfo(layer){
 
         var timeInfo = layer.resourceInfo.timeInfo;
 
-        return timeInfo;
+        app.timeExtent = timeInfo.timeExtent;
 
+        return timeInfo;
     }
 
     function updateMapTimeInfo(startTime, endTime){

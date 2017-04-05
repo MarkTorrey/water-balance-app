@@ -103,8 +103,8 @@ html, body {
     left: 0;
     background-color: #fff;
     z-index: 1000;
-    display: flex;
-    /*display: none;*/
+    /*display: flex;*/
+    display: none;
 }
 
 .bottom-pane > div.pie-chart-wrapper {
