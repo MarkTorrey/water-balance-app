@@ -7,6 +7,12 @@ require([
     "esri/layers/ArcGISImageServiceLayer", 
     "esri/layers/ImageServiceParameters",
 
+    "esri/graphic",
+    "esri/geometry/Point",
+    "esri/symbols/SimpleMarkerSymbol",
+    "esri/symbols/SimpleLineSymbol",
+    "esri/Color",
+
     "esri/arcgis/Portal", 
     "esri/arcgis/OAuthInfo", 
     "esri/IdentityManager",
@@ -16,6 +22,9 @@ require([
     "esri/layers/MosaicRule",
     "esri/layers/DimensionalDefinition",
 
+    "esri/tasks/ImageServiceIdentifyTask",
+    "esri/tasks/ImageServiceIdentifyParameters",
+
     "dojo/on",
     "dojo/dom-class",
     "dojo/_base/connect"
@@ -23,13 +32,16 @@ require([
     uiConfig, initUI, Application,
 
     Map, ArcGISImageServiceLayer, ImageServiceParameters,
+    Graphic, Point, SimpleMarkerSymbol, SimpleLineSymbol, Color,
     arcgisPortal, OAuthInfo, esriId,
     arcgisUtils, TimeExtent,
     MosaicRule, DimensionalDefinition,
+    ImageServiceIdentifyTask, ImageServiceIdentifyParameters,
 
     on, domClass, connect
 ){
-    // var app = new Application();
+    // Enforce strict mode
+    'use strict';
 
     var appConfig = {
         "webMapID": "00052bc317b3403babb8ddf9b64efeab",
@@ -37,6 +49,9 @@ require([
     };
 
     var app = {};
+
+    var imageServiceIdentifyTask;
+    var imageServiceIdentifyTaskParams; 
 
     signInToArcGISPortal();
 
@@ -56,16 +71,81 @@ require([
           domClass.remove(document.body, "app-loading");
         });
 
-        // app.map.on("click", getImageLayerDataByLocation);
+        app.map.on("click", getImageLayerDataByLocation);
         
-        // identifyTask = new ImageServiceIdentifyTask(IMAGE_LAYER_URL);
-        // identifyTaskParams = new ImageServiceIdentifyParameters();
+        imageServiceIdentifyTask = new ImageServiceIdentifyTask("https://earthobs2.arcgis.com/arcgis/rest/services/GLDAS_SoilMoisture/ImageServer");
+        imageServiceIdentifyTaskParams = new ImageServiceIdentifyParameters();
             
-        // identifyTaskParams.returnCatalogItems = true;
-        // identifyTaskParams.returnGeometry = false;
+        imageServiceIdentifyTaskParams.returnCatalogItems = true;
+        imageServiceIdentifyTaskParams.returnGeometry = false;
 
         initializeMapTimeExtent();
     });
+
+    function getImageLayerDataByLocation(event){
+
+        var identifyTaskInputGeometry = event.mapPoint;
+
+        addPointToMAp(identifyTaskInputGeometry);
+
+        executeIdentifyTask(identifyTaskInputGeometry);
+    }
+
+    function executeIdentifyTask(inputGeometry) {
+
+        // Set the geometry to the location of the view click
+        imageServiceIdentifyTaskParams.geometry = inputGeometry;
+
+        imageServiceIdentifyTaskParams.timeExtent = getTimeExtent(953121600000, 1481803200000);
+
+        imageServiceIdentifyTaskParams.mosaicRule = getMosaicRule();
+
+        imageServiceIdentifyTask.execute(imageServiceIdentifyTaskParams).then(function(response) {
+            console.log(response);
+        });
+    }
+
+    function getMosaicRule(){
+
+        var mosaicRule = new MosaicRule();
+
+        mosaicRule.method = MosaicRule.METHOD_NONE;
+
+        mosaicRule.operation = MosaicRule.OPERATION_SUM;
+
+        mosaicRule.multidimensionalDefinition = [];
+
+        mosaicRule.multidimensionalDefinition.push(new DimensionalDefinition({
+            variableName: "",
+            dimensionName: "StdZ",
+            values: [[-2, 0]],
+            isSlice: false
+        }));
+
+        return mosaicRule;
+    }
+
+    function addPointToMAp(geometry){
+
+        app.map.graphics.clear();
+
+        // Create a symbol for drawing the point
+        var markerSymbol = new SimpleMarkerSymbol(
+            SimpleMarkerSymbol.STYLE_CIRCLE, 
+            12, 
+            new SimpleLineSymbol(
+                SimpleLineSymbol.STYLE_NULL, 
+                new Color([247, 34, 101, 0.9]), 
+                1
+            ),
+            new Color([207, 34, 171, 0.5])
+        );
+
+        // Create a graphic and add the geometry and symbol to it
+        var pointGraphic = new Graphic(geometry, markerSymbol);
+
+        app.map.graphics.add(pointGraphic);
+    }
 
     function initializeMapTimeExtent(){
 
@@ -94,7 +174,7 @@ require([
         mr.multidimensionalDefinition.push(new DimensionalDefinition({
             variableName: "",
             dimensionName: "StdZ",
-            values: [-2, 0]
+            values: [[-2, 0]]
         }));
 
         layer.layerObject.setMosaicRule(mr);
@@ -125,15 +205,22 @@ require([
 
     function updateMapTimeInfo(startTime, endTime){
 
-        // console.log(startTime, endTime);
-
         var timeExtent = new TimeExtent();
         timeExtent.startTime = startTime;
         timeExtent.endTime = endTime;
 
+        app.map.setTimeExtent(timeExtent);
+    }
+
+    function getTimeExtent(startTime, endTime){
+
+        var timeExtent = new TimeExtent();
+        timeExtent.startTime = new Date(startTime);
+        timeExtent.endTime = new Date(endTime);
+
         console.log(timeExtent);
 
-        app.map.setTimeExtent(timeExtent);
+        return timeExtent;
     }
 
     function getEndTimeValue(startTime, timeInterval, esriTimeUnit){

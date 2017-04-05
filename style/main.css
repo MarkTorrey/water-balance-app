@@ -103,12 +103,25 @@ html, body {
     left: 0;
     background-color: #fff;
     z-index: 1000;
-    display: none;
+    display: flex;
+    /*display: none;*/
+}
+
+.bottom-pane > div.pie-chart-wrapper {
+    background-color: #123456;
+    width: 350px;
+}
+
+.bottom-pane > div.scatterplot-chart-wrapper {
+    background-color: #987654;
+    width: -webkit-calc(100% - 350px);
+    width:    -moz-calc(100% - 350px);
+    width:         calc(100% - 350px);
 }
 
 @media (max-width: 767px){
     .hidden-xs {
-        display: none!important;
+        display: none !important;
     }
 }
 
