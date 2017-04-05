@@ -103,20 +103,28 @@ html, body {
     left: 0;
     background-color: #fff;
     z-index: 1000;
-    /*display: flex;*/
-    display: none;
+    display: flex;
+    /*display: none;*/
 }
 
 .bottom-pane > div.pie-chart-wrapper {
-    background-color: #123456;
+    background-color: #e9e9e9;
     width: 350px;
 }
 
-.bottom-pane > div.scatterplot-chart-wrapper {
-    background-color: #987654;
+.bottom-pane > div.line-chart-wrapper {
+    background-color: #efefef;
     width: -webkit-calc(100% - 350px);
     width:    -moz-calc(100% - 350px);
     width:         calc(100% - 350px);
+}
+
+
+.axis path,
+.axis line {
+    fill: none;
+    stroke: #909090;
+    shape-rendering: crispEdges;
 }
 
 @media (max-width: 767px){

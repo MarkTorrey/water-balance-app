@@ -51,9 +51,6 @@ require([
 
     var app = {};
 
-    // var imageServiceIdentifyTask;
-    // var imageServiceIdentifyTaskParams; 
-
     signInToArcGISPortal();
 
     arcgisUtils.createMap(appConfig.webMapID,"mapDiv").then(function(response){
@@ -91,21 +88,19 @@ require([
 
         var identifyTaskURLs = getIdentifyTaskURLs(); 
 
-        var scatterplotChartData = [];
+        var lineChartData = [];
 
         addPointToMAp(identifyTaskInputGeometry);
 
         executeIdentifyTask(identifyTaskInputGeometry, identifyTaskURLs[0].url, identifyTaskURLs[0].title).then(function(results){
-            scatterplotChartData.push(results);
+            lineChartData.push(results);
 
             executeIdentifyTask(identifyTaskInputGeometry, identifyTaskURLs[1].url, identifyTaskURLs[1].title).then(function(results){
-                scatterplotChartData.push(results);
+                lineChartData.push(results);
 
-                console.log(scatterplotChartData);
+                createLineChart(lineChartData);
             });
-
         });
-
     }
 
     function executeIdentifyTask(inputGeometry, identifyTaskURL, imageServiceTitle) {
@@ -137,8 +132,8 @@ require([
     function processIdentifyTaskResults(results, imageServiceTitle){
 
         var processedResults = {
-            "title": imageServiceTitle,
-            "data": []
+            "key": imageServiceTitle,
+            "values": []
         };
 
         if(imageServiceTitle === "Snowpack" || imageServiceTitle === "Evapotranspiration"){
@@ -148,7 +143,7 @@ require([
                 var time = results.catalogItems.features[i].attributes.StdTime;
                 var value = results.properties.Values[i];
 
-                processedResults.data.push({stdTime: time, value: +value});
+                processedResults.values.push({stdTime: time, value: +value});
             }
         } 
         else if (imageServiceTitle === "Precipitation"){
@@ -159,7 +154,7 @@ require([
                     var time = results.catalogItems.features[i].attributes.StdTime;
                     var value = +results.properties.Values[i] + +results.properties.Values[i + 1];
 
-                    processedResults.data.push({stdTime: time, value: value});
+                    processedResults.values.push({stdTime: time, value: value});
                 }
             }
         }
@@ -366,6 +361,119 @@ require([
                 console.log("Error occurred while signing in: ", error);
             }
         );    
+    }
+
+    function createLineChart(data){
+
+        var containerID = ".line-chart-wrapper";
+
+        var container = $(containerID);
+
+        container.empty();
+
+        var timeFormat = d3.time.format("%Y");
+
+        var getDomainFromData = function(values, key){
+
+            var domain = [];
+            var lowest = Number.POSITIVE_INFINITY;
+            var highest = Number.NEGATIVE_INFINITY;
+            var tmp;
+
+            for (var i = values.length - 1; i >= 0; i--) {
+                tmp = +values[i][key];
+
+                if (tmp < lowest) {
+                    lowest = +tmp;
+                }
+
+                if (tmp > highest) {
+                    highest = +tmp;
+                }
+            }
+
+            domain.push(lowest, Math.ceil(highest));
+
+            console.log("domain for", key, domain);
+
+            return domain;
+        }
+
+        // Set the dimensions of the canvas / graph
+        var margin = {top: 35, right: 0, bottom: 5, left: 60};
+        var width = container.width() - margin.left - margin.right - 5;
+        var height = container.height() - margin.top - margin.bottom - 5;
+
+        // Adds the svg canvas
+        var svg = d3.select(containerID)
+            .append("svg")
+                .attr("width", width + margin.left + margin.right)
+                .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+                .attr('class', 'canvas-element')
+                .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+        var xScale = d3.time.scale()
+            .domain(getDomainFromData(data[1].values, "stdTime"))
+            .range([0, width - margin.left]);
+
+        var yScale = d3.scale.linear()
+            .domain(getDomainFromData(data[1].values, "value"))
+            .range([(height - margin.top), 0]);
+
+        // Define the axes
+        var xAxis = d3.svg.axis()
+            .scale(xScale)
+            .orient("bottom")
+            .ticks(15)
+            .tickPadding(5)
+            .innerTickSize(-(height - margin.top))
+            .tickFormat(timeFormat);
+
+        var yAxis = d3.svg.axis()
+            .scale(yScale)
+            .orient("left")
+            .ticks(8)
+            .tickPadding(15)
+            .innerTickSize(-(width - margin.left));
+
+        // Add the X Axis
+        svg.append("g")
+            .attr("class", "x axis")
+            .attr("transform", "translate(0," + (height - margin.top) + ")")
+            .call(xAxis);
+            
+        // Add the Y Axis
+        svg.append("g")
+            .attr("class", "y axis")
+            .call(yAxis);   
+
+        var createLine = d3.svg.line()
+            .x(function(d) {
+                return xScale(d.stdTime);
+            })
+            .y(function(d) {
+                return yScale(d.value);
+            })
+            .interpolate("basis"); //interpolate the straight lines into curve lines
+
+        //create container for each data group
+        var features = svg.selectAll('features')
+            .data(data)
+            .enter().append('g')
+            .attr('class', 'features');
+            
+        //append the line graphic
+        features.append('path')
+            .attr('class', 'line')
+            .attr('d', function(d){
+                return createLine(d.values)
+            })
+            .attr('stroke', function(d,j) { 
+                return "hsl(" + Math.random() * 360 + ",100%, 50%)";
+            })
+            .attr('stroke-width', 2)
+            .attr('fill', 'none');  
     }
 
 });
