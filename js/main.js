@@ -322,7 +322,7 @@ require([
         timeExtent.startTime = new Date(startTime);
         timeExtent.endTime = new Date(endTime);
 
-        console.log(timeExtent);
+        // console.log(timeExtent);
 
         return timeExtent;
     }
@@ -337,11 +337,27 @@ require([
                 break;
         }
 
+        timeInterval = timeInterval || 1;
+        formatedTimeUnit = formatedTimeUnit || "days";
+
         return new Date(moment(startTime).add(timeInterval, formatedTimeUnit).format());
     }
 
     function convertUnixValueToTime(unixValue){
         return new Date(moment(unixValue).format());
+    }
+
+    function getClosestValue (num, arr) {
+        var curr = arr[0];
+        var diff = Math.abs (num - curr);
+        for (var val = 0; val < arr.length; val++) {
+            var newdiff = Math.abs (num - arr[val]);
+            if (newdiff < diff) {
+                diff = newdiff;
+                curr = arr[val];
+            }
+        }
+        return curr;
     }
 
     function signInToArcGISPortal(){
@@ -371,7 +387,18 @@ require([
 
         container.empty();
 
+
         var timeFormat = d3.time.format("%Y");
+
+        var timeFormatWithMonth = d3.time.format("%Y-%b");
+
+        var uniqueTimeValues = data[0].values.map(function(d){
+            return d.stdTime;
+        });
+
+        var prevMouseXPosition = 0;
+
+        var currentSelectedTimeValue;
 
         var getDomainFromData = function(values, key){
 
@@ -415,10 +442,10 @@ require([
 
         var xScale = d3.time.scale()
             .domain(getDomainFromData(data[1].values, "stdTime"))
-            .range([0, width - margin.left]);
+            .rangeRound([0, width - margin.left]);
 
         var yScale = d3.scale.linear()
-            .domain(getDomainFromData(data[1].values, "value"))
+            .domain(getDomainFromData(data[0].values.concat(data[1].values), "value"))
             .range([(height - margin.top), 0]);
 
         // Define the axes
@@ -467,13 +494,124 @@ require([
         features.append('path')
             .attr('class', 'line')
             .attr('d', function(d){
-                return createLine(d.values)
+                return createLine(d.values);
             })
-            .attr('stroke', function(d, i) { 
-                return (i % 2) ? "#C697F4" : "#5FD2F8";
+            .attr('stroke', function(d) { 
+                return getColorByKey(d.key);
             })
             .attr('stroke-width', 1)
             .attr('fill', 'none');  
+
+        // Define 'div' for tooltips
+        var tooltipDiv = d3.select("body")
+            .append("div")
+            .attr("class", "tooltip")
+            .style("display", "none");      
+
+        //drwa the vertical reference line    
+        var verticalLine = svg.append('line')
+            .attr({
+                'x1': 0,
+                'y1': 0,
+                'x2': 0,
+                'y2': height - margin.top
+            })
+            .style("display", "none")
+            .attr("stroke", "#909090")
+            .attr('class', 'verticalLine');
+
+
+        svg.append("rect")
+            .attr("class", "overlay")
+            .attr("width", width)
+            .attr("height", height)
+            .on("mouseover", function() { 
+                verticalLine.style("display", null); 
+                tooltipDiv.style("display", null);
+            })
+            .on("mouseout", function() { 
+                verticalLine.style("display", "none"); 
+                tooltipDiv.style("display", "none"); 
+            })
+            .on("mousemove", mousemove)
+            .on('click', function(){
+                var startDate = new Date(currentSelectedTimeValue);
+                var endDate = getEndTimeValue(currentSelectedTimeValue);
+                
+                updateMapTimeInfo(startDate, endDate);
+            });  
+
+        function mousemove(){
+
+            var mousePositionX = d3.mouse(this)[0];
+
+            var xValueByMousePosition = xScale.invert(mousePositionX).getTime();
+
+            var closestTimeValue = getClosestValue(xValueByMousePosition, uniqueTimeValues);
+
+            var tooltipData = getTooltipDataByTime(closestTimeValue);
+
+            var tooltipContent = '<b>' + timeFormatWithMonth(new Date(closestTimeValue)) + '</b><br>';
+
+            var tooltipX = (mousePositionX > prevMouseXPosition) ? d3.event.pageX - 160 : (d3.event.pageX + 50 < container.width()) ?  d3.event.pageX + 5 : d3.event.pageX - 160;
+
+            // console.log(mousePositionX, container.width());
+
+            d3.select(".verticalLine").attr("transform", function () {
+                return "translate(" + xScale(closestTimeValue) + ", 0)";
+            });  
+
+            tooltipData.forEach(function(d){
+                tooltipContent += '<span style="color:' + getColorByKey(d.key) + '">' +  d.key + ': ' +  d.value+ '</span><br>';
+            });    
+            
+            tooltipDiv.html(tooltipContent)
+                .style("left", Math.max(0, tooltipX) + "px")
+                .style("top", (d3.event.pageY - 50) + "px");   
+
+            currentSelectedTimeValue = closestTimeValue;
+            
+            setTimeout(function(){
+                prevMouseXPosition = mousePositionX;
+            }, 500);
+        }
+
+        function getTooltipDataByTime(time){
+
+            var tooltipData = [];
+            var selectedItem;
+
+            for(var i = 0, len = data.length; i < len; i++){
+
+                selectedItem = data[i].values.filter(function(d){
+                    return d.stdTime === time;
+                });
+
+                tooltipData.push({
+                    key: data[i].key,
+                    value: selectedItem[0].value
+                });
+            }
+
+            return tooltipData;
+        }
+
+        function getColorByKey(key){
+
+            var color;
+
+            switch(key){
+                case "Precipitation":
+                    color = "#267FD1" 
+                    break;
+                case "Evapotranspiration":
+                    color = "#6D1D0D" 
+                    break;
+            }
+
+            return color;
+        }
+
     }
 
 });

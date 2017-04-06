@@ -118,17 +118,42 @@ html, body {
     width:         calc(100% - 350px);
 }
 
-
-.axis path,
-.axis line {
-    fill: none;
-    stroke: #909090;
-    shape-rendering: crispEdges;
-}
-
 @media (max-width: 767px){
     .hidden-xs {
         display: none !important;
     }
 }
 
+/* style of the d3 chart */
+.axis path,
+.axis line {
+    fill: none;
+    stroke: #d7d7d7;
+    shape-rendering: crispEdges;
+}
+
+.axis text {
+    fill: #636363;
+}
+
+.verticalLine {
+    stroke-width: 1;
+}
+
+div.tooltip {
+    font: 12px sans-serif;	
+    position: absolute;	
+    text-align: left;	
+    width: 150px;	
+    height: 50px;		
+    padding: 5px;	
+    background: rgba(240, 240, 240, 0.5);	
+    border: 0px;					
+    border-radius: 2px;
+    z-index: 1000;
+}   
+
+.overlay {
+    fill: none;
+    pointer-events: all;
+}  
