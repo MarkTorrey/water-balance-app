@@ -454,8 +454,8 @@ require([
             })
             .y(function(d) {
                 return yScale(d.value);
-            })
-            .interpolate("basis"); //interpolate the straight lines into curve lines
+            });
+            // .interpolate("monotone"); //interpolate the straight lines into curve lines
 
         //create container for each data group
         var features = svg.selectAll('features')
@@ -469,10 +469,10 @@ require([
             .attr('d', function(d){
                 return createLine(d.values)
             })
-            .attr('stroke', function(d,j) { 
-                return "hsl(" + Math.random() * 360 + ",100%, 50%)";
+            .attr('stroke', function(d, i) { 
+                return (i % 2) ? "#C697F4" : "#5FD2F8";
             })
-            .attr('stroke-width', 2)
+            .attr('stroke-width', 1)
             .attr('fill', 'none');  
     }
 

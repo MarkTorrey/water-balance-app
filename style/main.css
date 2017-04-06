@@ -113,7 +113,6 @@ html, body {
 }
 
 .bottom-pane > div.line-chart-wrapper {
-    background-color: #efefef;
     width: -webkit-calc(100% - 350px);
     width:    -moz-calc(100% - 350px);
     width:         calc(100% - 350px);
