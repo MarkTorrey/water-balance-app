@@ -248,13 +248,13 @@ require([
 
         var startTime = convertUnixValueToTime(visibleLayerTimeInfo.timeExtent[0]);
 
-        var endTime = getEndTimeValue(startTime, visibleLayerTimeInfo.defaultTimeInterval, visibleLayerTimeInfo.defaultTimeIntervalUnits);
+        var endTime = getEndTimeValue(startTime);
 
         setZExtentForImageLayer(visibleLayer);
 
         updateMapTimeInfo(startTime, endTime);
 
-        console.log(visibleLayerTimeInfo.timeExtent[0], visibleLayerTimeInfo.timeExtent[1]);
+        // console.log(visibleLayerTimeInfo.timeExtent[0], visibleLayerTimeInfo.timeExtent[1]);
     }
 
     function setZExtentForImageLayer(layer){
@@ -520,6 +520,19 @@ require([
             .attr("stroke", "#909090")
             .attr('class', 'verticalLine');
 
+        //drwa the vertical reference line    
+        var highlightRefLine = svg.append('line')
+            .attr({
+                'x1': 0,
+                'y1': 0,
+                'x2': 0,
+                'y2': height - margin.top
+            })
+            .style("display", "none")
+            .attr("stroke", "red")
+            .attr("stroke-width", "0.5")
+            .attr('class', 'highlightRefLine');
+
 
         svg.append("rect")
             .attr("class", "overlay")
@@ -539,6 +552,12 @@ require([
                 var endDate = getEndTimeValue(currentSelectedTimeValue);
                 
                 updateMapTimeInfo(startDate, endDate);
+
+                highlightRefLine.attr("transform", function () {
+                    return "translate(" + xScale(currentSelectedTimeValue) + ", 0)";
+                });  
+
+                highlightRefLine.style("display", null); 
             });  
 
         function mousemove(){
