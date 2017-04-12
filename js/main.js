@@ -431,7 +431,7 @@ require([
 
         var timeFormat = d3.time.format("%Y");
 
-        var timeFormatWithMonth = d3.time.format("%Y-%b");
+        var timeFormatWithMonth = d3.time.format("%b %Y");
 
         var uniqueTimeValues = data[0].values.map(function(d){
             return d.stdTime;
@@ -669,34 +669,69 @@ require([
 
             var runoffData = getChartDataByTime(time, [app.runoffData]);
 
-            var pieChartData = precipAndEvapoData.concat(runoffData);
+            var precipData = precipAndEvapoData.filter(function(d){
+                return d.key === "Precipitation";
+            });
+
+            var evapoData = precipAndEvapoData.filter(function(d){
+                return d.key === "Evapotranspiration";
+            });
+
+            var surfaceChangingStorageData = {
+                "key": "Surface Changing Storage",
+                "value": precipData[0].value - evapoData[0].value - runoffData[0].value
+            };
+
+            var pieChartData = runoffData.concat(evapoData).concat([surfaceChangingStorageData]);
+
+            var formatedTime = timeFormatWithMonth(new Date(time));
+
+            $(".pie-chart-title-text").text("Water Balance - " + formatedTime);
 
             createPieChart(pieChartData);
         }
     }
 
     function createPieChart(data){
-
-        console.log("pie chart data", data);
         
-        var containerID = ".pie-chart-wrapper";
+        var containerID = ".pie-chart-div";
 
         var container = $(containerID);
 
         container.empty();
 
         // Set the dimensions of the canvas / graph
-        var width = container.width() * 0.8;
-        var height = container.height() * 0.8;
+        var width = container.width();
+        var height = container.height();
 
         var radius = Math.min(width, height) / 2;
 
         var color = d3.scale.category20c();
 
-        var vis = d3.select(containerID)
-            .append("svg:svg").data([data])
-            .attr("width", width).attr("height", height).append("svg:g")
-            .attr("transform", "translate(" + radius + "," + radius + ")");
+        var pieChartData = data.filter(function(d){
+            return d.value >= 0;
+        });
+
+        if(pieChartData.length < 3){
+            //the value of surface changing storage is negtive, add a note to pie chart
+
+            var surfaceChangingStorageData = data.filter(function(d){
+                return d.key === "Surface Changing Storage";
+            });
+
+            // console.log("surfaceChangingStorageData", surfaceChangingStorageData); 
+
+            $(".pie-chart-footnote-div").html("<span>" + Math.abs(surfaceChangingStorageData[0].value) + " mm taken out of storage" + "</span>")
+        } else {
+            $(".pie-chart-footnote-div").html("");
+        }
+
+        var svg = d3.select(containerID)
+            .append("svg:svg").data([pieChartData])
+            .attr("width", width)
+            .attr("height", height)
+            .append("svg:g")
+            .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
 
         var pie = d3.layout.pie().value(function(d){return d.value;});
 
@@ -704,7 +739,7 @@ require([
         var arc = d3.svg.arc().outerRadius(radius);
 
         // select paths, use arc generator to draw
-        var arcs = vis.selectAll("g.slice")
+        var arcs = svg.selectAll("g.slice")
             .data(pie).enter()
             .append("svg:g").attr("class", "slice");
 
@@ -714,7 +749,7 @@ require([
             })
             .attr("d", function (d) {
                 // log the result of the arc generator to show how cool it is :)
-                console.log(arc(d));
+                // console.log(arc(d));
                 return arc(d);
             });
 
@@ -722,12 +757,12 @@ require([
         arcs.append("svg:text")
             .attr("transform", function(d){
                 d.innerRadius = 0;
-                d.outerRadius = r;
+                d.outerRadius = radius;
                 return "translate(" + arc.centroid(d) + ")";
             })
             .attr("text-anchor", "middle")
             .text( function(d, i) {
-                return data[i].value;
+                return (data[i].value) ? data[i].value + "mm": "";
             }
         );
     }
