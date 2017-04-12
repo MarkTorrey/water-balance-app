@@ -78,7 +78,6 @@ require([
 
         app.map.on("click", getImageLayerDataByLocation);
 
-        
         initializeMapTimeAndZExtent();
     });
 
@@ -86,21 +85,54 @@ require([
 
         var identifyTaskInputGeometry = event.mapPoint;
 
+        var lineChartData = [];
+
         var identifyTaskURLs = getIdentifyTaskURLs(); 
 
-        var lineChartData = [];
+        var identifyTaskOnSuccessHandler = function(results){
+
+            if(results.key === "Runoff"){
+                app.runoffData = results;
+            } else {
+                
+                lineChartData.push(results);
+
+                if(lineChartData.length === 2){
+
+                    domClass.remove(document.body, "app-loading");
+                
+                    toggleBottomPane(true);
+
+                    createLineChart(lineChartData);
+                }
+            } 
+        };
+
+        domClass.add(document.body, "app-loading");
+
+        toggleBottomPane(false);
 
         addPointToMAp(identifyTaskInputGeometry);
 
-        executeIdentifyTask(identifyTaskInputGeometry, identifyTaskURLs[0].url, identifyTaskURLs[0].title).then(function(results){
-            lineChartData.push(results);
+        identifyTaskURLs.forEach(function(d){
 
-            executeIdentifyTask(identifyTaskInputGeometry, identifyTaskURLs[1].url, identifyTaskURLs[1].title).then(function(results){
-                lineChartData.push(results);
-
-                createLineChart(lineChartData);
+            executeIdentifyTask(identifyTaskInputGeometry, d.url, d.title).then(function(results){
+                identifyTaskOnSuccessHandler(results);
             });
+
         });
+
+        // executeIdentifyTask(identifyTaskInputGeometry, identifyTaskURLs[0].url, identifyTaskURLs[0].title).then(function(results){
+        //     console.log(results);
+        // });
+
+        // executeIdentifyTask(identifyTaskInputGeometry, identifyTaskURLs[1].url, identifyTaskURLs[1].title).then(function(results){
+        //     identifyTaskOnSuccessHandler(results);
+        // });
+
+        // executeIdentifyTask(identifyTaskInputGeometry, identifyTaskURLs[2].url, identifyTaskURLs[2].title).then(function(results){
+        //     identifyTaskOnSuccessHandler(results);
+        // });
     }
 
     function executeIdentifyTask(inputGeometry, identifyTaskURL, imageServiceTitle) {
@@ -146,7 +178,7 @@ require([
                 processedResults.values.push({stdTime: time, value: +value});
             }
         } 
-        else if (imageServiceTitle === "Precipitation"){
+        else if (imageServiceTitle === "Precipitation" || imageServiceTitle === "Runoff"){
             // sum rain and snow to get total precipitation of the month
             for(var i = 0, len = results.properties.Values.length; i < len; i++){
 
@@ -154,7 +186,7 @@ require([
                     var time = results.catalogItems.features[i].attributes.StdTime;
                     var value = +results.properties.Values[i] + +results.properties.Values[i + 1];
 
-                    processedResults.values.push({stdTime: time, value: value});
+                    processedResults.values.push({stdTime: time, value: +value});
                 }
             }
         }
@@ -176,7 +208,7 @@ require([
                     urls.push(app.operationalLayersURL[i]);
                 } 
             } else {
-                if(app.operationalLayersURL[i].title === "Precipitation" || app.operationalLayersURL[i].title === "Evapotranspiration") {
+                if(app.operationalLayersURL[i].title === "Precipitation" || app.operationalLayersURL[i].title === "Evapotranspiration" || app.operationalLayersURL[i].title === "Runoff") {
                     urls.push(app.operationalLayersURL[i]);
                 } 
             }
@@ -322,8 +354,6 @@ require([
         timeExtent.startTime = new Date(startTime);
         timeExtent.endTime = new Date(endTime);
 
-        // console.log(timeExtent);
-
         return timeExtent;
     }
 
@@ -358,6 +388,17 @@ require([
             }
         }
         return curr;
+    }
+
+    function toggleBottomPane(isVisible){
+
+        var bottomPane = $(".bottom-pane");
+
+        if(isVisible){
+            bottomPane.addClass("visible");
+        } else {
+            bottomPane.removeClass("visible");
+        }
     }
 
     function signInToArcGISPortal(){
@@ -545,6 +586,7 @@ require([
             .on("mouseout", function() { 
                 verticalLine.style("display", "none"); 
                 tooltipDiv.style("display", "none"); 
+                getPieChartDataByTime(currentSelectedTimeValue);
             })
             .on("mousemove", mousemove)
             .on('click', function(){
@@ -558,6 +600,8 @@ require([
                 });  
 
                 highlightRefLine.style("display", null); 
+
+                getPieChartDataByTime(currentSelectedTimeValue);
             });  
 
         function mousemove(){
@@ -568,7 +612,7 @@ require([
 
             var closestTimeValue = getClosestValue(xValueByMousePosition, uniqueTimeValues);
 
-            var tooltipData = getTooltipDataByTime(closestTimeValue);
+            var tooltipData = getChartDataByTime(closestTimeValue);
 
             var tooltipContent = '<b>' + timeFormatWithMonth(new Date(closestTimeValue)) + '</b><br>';
 
@@ -589,48 +633,121 @@ require([
                 .style("top", (d3.event.pageY - 50) + "px");   
 
             currentSelectedTimeValue = closestTimeValue;
+
+            getPieChartDataByTime(currentSelectedTimeValue);
             
             setTimeout(function(){
                 prevMouseXPosition = mousePositionX;
             }, 500);
         }
 
-        function getTooltipDataByTime(time){
+        function getChartDataByTime(time, inputData){
 
-            var tooltipData = [];
+            var chartData = [];
             var selectedItem;
 
-            for(var i = 0, len = data.length; i < len; i++){
+            inputData = inputData || data;
 
-                selectedItem = data[i].values.filter(function(d){
+            for(var i = 0, len = inputData.length; i < len; i++){
+
+                selectedItem = inputData[i].values.filter(function(d){
                     return d.stdTime === time;
                 });
 
-                tooltipData.push({
-                    key: data[i].key,
+                chartData.push({
+                    key: inputData[i].key,
                     value: selectedItem[0].value
                 });
             }
 
-            return tooltipData;
+            return chartData;
         }
 
-        function getColorByKey(key){
+        function getPieChartDataByTime(time){
 
-            var color;
+            var precipAndEvapoData = getChartDataByTime(time);
 
-            switch(key){
-                case "Precipitation":
-                    color = "#267FD1" 
-                    break;
-                case "Evapotranspiration":
-                    color = "#6D1D0D" 
-                    break;
+            var runoffData = getChartDataByTime(time, [app.runoffData]);
+
+            var pieChartData = precipAndEvapoData.concat(runoffData);
+
+            createPieChart(pieChartData);
+        }
+    }
+
+    function createPieChart(data){
+
+        console.log("pie chart data", data);
+        
+        var containerID = ".pie-chart-wrapper";
+
+        var container = $(containerID);
+
+        container.empty();
+
+        // Set the dimensions of the canvas / graph
+        var width = container.width() * 0.8;
+        var height = container.height() * 0.8;
+
+        var radius = Math.min(width, height) / 2;
+
+        var color = d3.scale.category20c();
+
+        var vis = d3.select(containerID)
+            .append("svg:svg").data([data])
+            .attr("width", width).attr("height", height).append("svg:g")
+            .attr("transform", "translate(" + radius + "," + radius + ")");
+
+        var pie = d3.layout.pie().value(function(d){return d.value;});
+
+        // declare an arc generator function
+        var arc = d3.svg.arc().outerRadius(radius);
+
+        // select paths, use arc generator to draw
+        var arcs = vis.selectAll("g.slice")
+            .data(pie).enter()
+            .append("svg:g").attr("class", "slice");
+
+        arcs.append("svg:path")
+            .attr("fill", function(d, i){
+                return color(i);
+            })
+            .attr("d", function (d) {
+                // log the result of the arc generator to show how cool it is :)
+                console.log(arc(d));
+                return arc(d);
+            });
+
+        // add the text
+        arcs.append("svg:text")
+            .attr("transform", function(d){
+                d.innerRadius = 0;
+                d.outerRadius = r;
+                return "translate(" + arc.centroid(d) + ")";
+            })
+            .attr("text-anchor", "middle")
+            .text( function(d, i) {
+                return data[i].value;
             }
+        );
+    }
 
-            return color;
+    function getColorByKey(key){
+
+        var color;
+
+        switch(key){
+            case "Precipitation":
+                color = "#267FD1" 
+                break;
+            case "Evapotranspiration":
+                color = "#6D1D0D" 
+                break;
+            case "Runoff":
+                color = "#654789"
+                break;
         }
-
+        return color;
     }
 
 });
