@@ -85,7 +85,7 @@ require([
 
         var identifyTaskInputGeometry = event.mapPoint;
 
-        var lineChartData = [];
+        var chartData = [];
 
         var identifyTaskURLs = getIdentifyTaskURLs(); 
 
@@ -95,15 +95,17 @@ require([
                 app.runoffData = results;
             } else {
                 
-                lineChartData.push(results);
+                chartData.push(results);
 
-                if(lineChartData.length === 2){
+                if(chartData.length === 2){
 
                     domClass.remove(document.body, "app-loading");
                 
                     toggleBottomPane(true);
 
-                    createLineChart(lineChartData);
+                    createLineChart(chartData);
+
+                    createMonthlyTrendChart(chartData);
                 }
             } 
         };
@@ -534,8 +536,6 @@ require([
 
         barWidth = (!barWidth) ? 0.5 : barWidth;
 
-        console.log(barWidth);
-
         svg.selectAll("bar")
             .data(precipData[0].values)
             .enter().append("rect")
@@ -632,7 +632,7 @@ require([
 
                 highlightRefLine.style("display", null); 
 
-                getPieChartDataByTime(currentSelectedTimeValue);
+                // getPieChartDataByTime(currentSelectedTimeValue);
             });  
 
         function mousemove(){
@@ -796,6 +796,34 @@ require([
                 return (data[i].value) ? data[i].value + "mm": "";
             }
         );
+    }
+
+    function createMonthlyTrendChart(data){
+
+        var getMonthFromTime = d3.time.format("%B");
+        var getYearFromTime = d3.time.format("%Y");
+
+        var chartData = data.map(function(d){
+
+            d.values.forEach(function(k){
+                var stdTime = new Date(k.stdTime);
+                k.month = getMonthFromTime(stdTime);
+                k.year = getYearFromTime(stdTime);
+            });
+
+            var entries = d3.nest()
+                .key(function(d){ return d.month; })
+                .entries(d.values);
+
+            return {
+                "key": d.key,
+                "values": entries
+            };
+
+        });
+
+        console.log(chartData);
+
     }
 
     function getColorByKey(key){
