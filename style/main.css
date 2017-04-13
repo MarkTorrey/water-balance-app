@@ -216,7 +216,7 @@ div.tooltip {
     width: 150px;	
     height: 50px;		
     padding: 5px;	
-    background: rgba(240, 240, 240, 0.5);	
+    background: rgba(240, 240, 240, 0.8);	
     border: 0px;					
     border-radius: 2px;
     z-index: 1000;

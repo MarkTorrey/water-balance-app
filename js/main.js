@@ -428,6 +428,7 @@ require([
 
         container.empty();
 
+        // console.log(data);
 
         var timeFormat = d3.time.format("%Y");
 
@@ -525,9 +526,40 @@ require([
             });
             // .interpolate("monotone"); //interpolate the straight lines into curve lines
 
+        var precipData = data.filter(function(d){
+            return d.key === "Precipitation";
+        });
+
+        var barWidth = Math.floor((width/precipData[0].values.length) * 0.8);
+
+        barWidth = (!barWidth) ? 0.5 : barWidth;
+
+        console.log(barWidth);
+
+        svg.selectAll("bar")
+            .data(precipData[0].values)
+            .enter().append("rect")
+            .style("fill", getColorByKey("Precipitation"))
+            .style("opacity", 0.7)
+            .attr("x", function(d) { 
+                // console.log(d);
+                return xScale(d.stdTime) - barWidth/2; 
+            })
+            .attr("width", barWidth)
+            .attr("y", function(d) { 
+                return yScale(d.value); 
+            })
+            .attr("height", function(d) { 
+                return height - margin.top - yScale(d.value); 
+            });
+
+        var evapoData = data.filter(function(d){
+            return d.key === "Evapotranspiration";
+        });
+
         //create container for each data group
         var features = svg.selectAll('features')
-            .data(data)
+            .data(evapoData)
             .enter().append('g')
             .attr('class', 'features');
             
@@ -573,7 +605,6 @@ require([
             .attr("stroke", "red")
             .attr("stroke-width", "0.5")
             .attr('class', 'highlightRefLine');
-
 
         svg.append("rect")
             .attr("class", "overlay")
@@ -745,7 +776,7 @@ require([
 
         arcs.append("svg:path")
             .attr("fill", function(d, i){
-                return color(i);
+                return getColorByKey(d.data.key);
             })
             .attr("d", function (d) {
                 // log the result of the arc generator to show how cool it is :)
@@ -773,13 +804,16 @@ require([
 
         switch(key){
             case "Precipitation":
-                color = "#267FD1" 
+                color = "#476C9B" 
                 break;
             case "Evapotranspiration":
-                color = "#6D1D0D" 
+                color = "#984447" 
                 break;
             case "Runoff":
-                color = "#654789"
+                color = "#ADD9F4"
+                break;
+            case "Surface Changing Storage":
+                color = "#468C98"
                 break;
         }
         return color;
