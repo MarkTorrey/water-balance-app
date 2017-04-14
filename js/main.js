@@ -557,6 +557,8 @@ require([
             return d.key === "Evapotranspiration";
         });
 
+        // console.log("evapoData", evapoData);
+
         //create container for each data group
         var features = svg.selectAll('features')
             .data(evapoData)
@@ -801,7 +803,7 @@ require([
     function createMonthlyTrendChart(data){
 
         var getMonthFromTime = d3.time.format("%B");
-        var getYearFromTime = d3.time.format("%Y");
+        var getYearFromTime = d3.time.format("%y");
 
         var chartData = data.map(function(d){
 
@@ -819,11 +821,121 @@ require([
                 "key": d.key,
                 "values": entries
             };
-
         });
 
-        console.log(chartData);
+        var uniqueYearValues = chartData[0].values[0].values.map(function(d) {
+            return d.year;
+        });
 
+        var containerID = ".monthly-trend-chart-div";
+
+        var container = $(containerID);
+
+        container.empty();
+
+        // Set the dimensions of the canvas / graph
+        var margin = {top: 5, right: 0, bottom: 20, left: 20};
+        var width = container.width() - margin.left - margin.right;
+        var height = container.height() - margin.top - margin.bottom;
+
+        // Adds the svg canvas
+        var svg = d3.select(containerID)
+            .append("svg")
+                .attr("width", width + margin.left + margin.right)
+                .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+                .attr('class', 'canvas-element-monthly-trend-chart')
+                .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+        var xScale = d3.scale.ordinal()
+            .domain(uniqueYearValues)
+            .rangeRoundBands([margin.left, width], 1);
+
+        var yScale = d3.scale.linear()
+            .range([height - margin.top, 0])
+            .domain(
+                [0, d3.max(data[0].values.concat(data[1].values), function(d) {return d.value;})]
+            );  
+
+        var xAxis = d3.svg.axis()
+            .innerTickSize(-(height - margin.top))
+            .tickPadding(10)
+            .scale(xScale)
+            .ticks(8)
+            .orient("bottom");
+            
+        var yAxis = d3.svg.axis()
+            .scale(yScale)
+            .innerTickSize(-(width - margin.left))
+            .ticks(6)
+            .tickPadding(5)
+            .orient("left");
+        
+        svg.append("svg:g")
+            .attr("class", "x axis")
+            .attr("transform", "translate(0," + (height - margin.top) + ")")
+            .call(xAxis);
+            
+        svg.append("svg:g")
+            .attr("class", "y axis")
+            .attr("transform", "translate(" + (margin.left) + ",0)")
+            .call(yAxis);
+
+        var c20 = d3.scale.category20();
+
+        var createLine = d3.svg.line()
+            .x(function(d) {
+                return xScale(d.year);
+            })
+            .y(function(d) {
+                return yScale(+d.value);
+            })
+            .interpolate("monotone");
+
+        var precipData = chartData.filter(function(d){
+            return d.key === "Precipitation";
+        });
+
+        var evapoData = chartData.filter(function(d){
+            return d.key === "Evapotranspiration";
+        });
+
+        //create container for each data group
+        var features = svg.selectAll('features')
+            .data(precipData[0].values)
+            .enter().append('g')
+            .attr('class', 'features');
+            
+        //append the line graphic
+        features.append('path')
+            .attr('class', 'monthly-trend-line')
+            .attr('d', function(d){
+                return createLine(d.values);
+            })
+            .attr('stroke', function(d, i) { 
+                return c20(i);
+            })
+            .style('opacity', "0.2")
+            .attr('stroke-width', 1)
+            .attr('fill', 'none');  
+
+        function highlightLineByMonth(month){
+
+            d3.selectAll(".monthly-trend-line").style("opacity", 0.2);
+            d3.selectAll(".monthly-trend-line").style("stroke-width", 1);
+
+            d3.selectAll(".monthly-trend-line").each(function(d){
+                var lineElement = d3.select(this).node();
+
+                if(d.key === month){
+                    console.log("highlight", lineElement);
+                    d3.select(lineElement).style("opacity", 1);
+                    d3.select(lineElement).style("stroke-width", 3);
+                } 
+            });
+        }
+
+        highlightLineByMonth("January");
     }
 
     function getColorByKey(key){

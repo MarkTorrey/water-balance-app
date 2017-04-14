@@ -114,7 +114,26 @@ html, body {
 
 .bottom-pane > div.pie-chart-wrapper {
     background-color: #f2f2f2;
-    width: 350px;
+    width: 250px;
+}
+
+.bottom-pane > div.monthly-trend-chart-wrapper {
+    background-color: #f2f2f2;
+    width: 450px;
+}
+
+.monthly-trend-chart-wrapper > .monthly-trend-chart-top-div {
+    width: 90%;
+    height: 15%;
+    /*background-color: #987654;*/
+    margin: 10px auto 0;
+}
+
+.monthly-trend-chart-wrapper > .monthly-trend-chart-div {
+    width: 90%;
+    height: 75%;
+    /*background-color: #123456;*/
+    margin: 0 auto;
 }
 
 .pie-chart-wrapper > .pie-chart-title-div {
@@ -182,9 +201,9 @@ html, body {
 }
 
 .bottom-pane > div.line-chart-wrapper {
-    width: -webkit-calc(100% - 350px);
-    width:    -moz-calc(100% - 350px);
-    width:         calc(100% - 350px);
+    width: -webkit-calc(100% - 700px);
+    width:    -moz-calc(100% - 700px);
+    width:         calc(100% - 700px);
 }
 
 @media (max-width: 767px){
