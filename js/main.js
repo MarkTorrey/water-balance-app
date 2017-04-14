@@ -436,6 +436,8 @@ require([
 
         var timeFormatWithMonth = d3.time.format("%b %Y");
 
+        var timeFormatFullMonthName = d3.time.format("%B");
+
         var uniqueTimeValues = data[0].values.map(function(d){
             return d.stdTime;
         });
@@ -667,6 +669,8 @@ require([
 
             currentSelectedTimeValue = closestTimeValue;
 
+            highlightTrendLineByMonth(timeFormatFullMonthName(new Date(closestTimeValue)));
+
             getPieChartDataByTime(currentSelectedTimeValue);
             
             setTimeout(function(){
@@ -817,8 +821,12 @@ require([
                 .key(function(d){ return d.month; })
                 .entries(d.values);
 
+            entries.forEach(function(i){
+                i.dataType = d.key;
+            });
+
             return {
-                "key": d.key,
+                "key": d.key, 
                 "values": entries
             };
         });
@@ -902,7 +910,7 @@ require([
 
         //create container for each data group
         var features = svg.selectAll('features')
-            .data(precipData[0].values)
+			.data(precipData[0].values.concat(evapoData[0].values))
             .enter().append('g')
             .attr('class', 'features');
             
@@ -913,30 +921,34 @@ require([
                 return createLine(d.values);
             })
             .attr('stroke', function(d, i) { 
-                return c20(i);
+                return getColorByKey(d.dataType);
             })
             .style('opacity', "0.2")
             .attr('stroke-width', 1)
             .attr('fill', 'none');  
 
-        function highlightLineByMonth(month){
 
-            d3.selectAll(".monthly-trend-line").style("opacity", 0.2);
-            d3.selectAll(".monthly-trend-line").style("stroke-width", 1);
-
-            d3.selectAll(".monthly-trend-line").each(function(d){
-                var lineElement = d3.select(this).node();
-
-                if(d.key === month){
-                    console.log("highlight", lineElement);
-                    d3.select(lineElement).style("opacity", 1);
-                    d3.select(lineElement).style("stroke-width", 3);
-                } 
-            });
-        }
-
-        highlightLineByMonth("January");
+        highlightTrendLineByMonth("January");
     }
+
+    function highlightTrendLineByMonth(month){
+
+        $(".monthly-trend-chart-top-div").text("Water Flux Trend - " + month);
+
+        d3.selectAll(".monthly-trend-line").style("opacity", 0.2);
+        d3.selectAll(".monthly-trend-line").style("stroke-width", 1);
+
+        d3.selectAll(".monthly-trend-line").each(function(d){
+            var lineElement = d3.select(this).node();
+
+            if(d.key === month){
+                // console.log("highlight", lineElement);
+                d3.select(lineElement).style("opacity", 1);
+                d3.select(lineElement).style("stroke-width", 3);
+            } 
+        });
+    }
+
 
     function getColorByKey(key){
 

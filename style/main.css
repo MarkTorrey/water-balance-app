@@ -124,9 +124,12 @@ html, body {
 
 .monthly-trend-chart-wrapper > .monthly-trend-chart-top-div {
     width: 90%;
-    height: 15%;
+    height: 45px;
     /*background-color: #987654;*/
     margin: 10px auto 0;
+    text-align: center;
+    line-height: 45px;
+    font-size: 14px;
 }
 
 .monthly-trend-chart-wrapper > .monthly-trend-chart-div {
