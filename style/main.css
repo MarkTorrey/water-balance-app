@@ -125,7 +125,7 @@ html, body {
 .monthly-trend-chart-wrapper > .monthly-trend-chart-top-div {
     width: 90%;
     height: 45px;
-    /*background-color: #987654;*/
+    background-color: #987654;
     margin: 10px auto 0;
     text-align: center;
     line-height: 45px;
@@ -248,3 +248,9 @@ div.tooltip {
     fill: none;
     pointer-events: all;
 }  
+
+select {
+    font-size: 17px;
+    height: 3rem;
+    line-height: 3rem;
+}

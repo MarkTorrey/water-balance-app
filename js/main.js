@@ -933,7 +933,7 @@ require([
 
     function highlightTrendLineByMonth(month){
 
-        $(".monthly-trend-chart-top-div").text("Water Flux Trend - " + month);
+        // $(".monthly-trend-chart-top-div").text("Water Flux Trend - " + month);
 
         d3.selectAll(".monthly-trend-line").style("opacity", 0.2);
         d3.selectAll(".monthly-trend-line").style("stroke-width", 1);

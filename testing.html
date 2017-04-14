@@ -1,119 +1,67 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    
-    <meta name="viewport" content="initial-scale=1, maximum-scale=1,user-scalable=no">
-    <title>Simple Image Service</title>
-    <link rel="stylesheet" href="https://js.arcgis.com/3.20/esri/css/esri.css" />
+<head>
+    <title>Testing</title>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
 
-    <style>
-      html, body, #map { height: 100%; width: 100%; margin: 0; padding: 0; }
-    </style>
+    <link rel="icon" href="//www.esri.com/favicon.ico">
+    <link rel="stylesheet" href="https://s3-us-west-1.amazonaws.com/patterns.esri.com/files/calcite-web/1.0.0-rc.3/css/calcite-web.min.css">
+    <link rel="stylesheet" href="//js.arcgis.com/3.16/esri/themes/calcite/dijit/calcite.css">
+    <link rel="stylesheet" href="//js.arcgis.com/3.16/esri/themes/calcite/esri/esri.css">
 
-    <script src="https://js.arcgis.com/3.20/"></script>
     <script>
-      var map;
-      require([
-        "esri/map",
-        "esri/layers/ArcGISImageServiceLayer", 
-        "esri/layers/ImageServiceParameters",
+        var locationPath = location.origin + location.pathname.replace(/\/[^/]+$/, '');
+        var dojoConfig = {
+            parseOnLoad: true,
+            packages: [
+                {
+                    "name": "app_modules",
+                    "location": locationPath + '/js/modules'
+                },
+                {
+                    "name": "configs",
+                    "location": locationPath + '/js/configs'
+                },                
+            ]
+        };
+    </script>   
 
-        "esri/arcgis/Portal", 
-        "esri/arcgis/OAuthInfo", 
-        "esri/IdentityManager",
-        "esri/arcgis/utils",
-        "esri/TimeExtent",
+    <script src="//code.jquery.com/jquery-1.12.0.min.js"></script>
+    <script src="https://s3-us-west-1.amazonaws.com/patterns.esri.com/files/calcite-web/1.0.0-rc.3/js/calcite-web.min.js"></script>
+    <!--<script src="https://js.arcgis.com/3.16/"></script>-->
 
-        "esri/layers/MosaicRule",
-        "esri/layers/DimensionalDefinition",
+    
+</head>
 
-        "dojo/dom-class",
-        "dojo/_base/connect"
-    ], function (
+<body class="calcite">
+    
+    <!--<nav class="navbar-fixed-top">
+        <div class="navbar-title">
+            <span class="title-main">Water Balance App</span>
+            <span class="title-divider hidden-xs"></span>
+            <span class="title-sub hidden-xs">Click anywhere on earth and see how climate change is affecting the water balance</span>
+        </div>
+    </nav>-->
 
-        Map, ArcGISImageServiceLayer, ImageServiceParameters,
-        arcgisPortal, OAuthInfo, esriId,
-        arcgisUtils, TimeExtent,
-        MosaicRule, DimensionalDefinition,
+    <div style="width: 150px; height: 100px;">
 
-        domClass,
-        connect
-    ){
+        <select class="modifier-class">
+            <option value="">Menu 1</option>
+            <option value="">Menu 2</option>
+            <option value="">Menu 3</option>
+            <option value="">Menu 4</option>
+        </select>
 
-        signInToArcGISPortal();
-
-        map = new Map("map", {
-          basemap: "topo",
-          center: [-79.40, 43.64],
-          zoom: 3
-        });
-
-        updateMapTimeInfo(951912000000,954586800000);
-
-        var imageServiceLayer = new ArcGISImageServiceLayer("https://earthobs2.arcgis.com/arcgis/rest/services/GLDAS_SoilMoisture/ImageServer", {
-          opacity: 1
-        });
-        map.addLayer(imageServiceLayer);
-
-        // setZExtentForImageLayer(imageServiceLayer);
-
-
-        function updateMapTimeInfo(startTime, endTime){
-
-            // console.log(startTime, endTime);
-
-            var timeExtent = new TimeExtent();
-            timeExtent.startTime = new Date(startTime);
-            timeExtent.endTime = new Date(endTime);
-
-            console.log(timeExtent);
-
-            map.setTimeExtent(timeExtent);
-        }
-
-        function setZExtentForImageLayer(layer){
-            var mr = new MosaicRule({
-                "method" : "esriMosaicNone",
-                "ascending" : true,
-                "operation" : "MT_SUM"
-            });
-            mr.multidimensionalDefinition = [];
-            mr.multidimensionalDefinition.push(new DimensionalDefinition({
-                variableName: "",
-                dimensionName: "StdZ",
-                values: [-2, 0]
-            }));
-
-            layer.mosaicRule = mr;
-        }
+    </div>
 
 
-        function signInToArcGISPortal(){
 
-            var info = new OAuthInfo({
-                appId: "T2NYnYffgXujL6DV",
-                popup: false
-            });    
-            esriId.registerOAuthInfos([info]);   
-            
-            new arcgisPortal.Portal(info.portalUrl).signIn()
-            .then(function(){
-                console.log('you are logged in');
-            })     
-            .otherwise(
-                function (error){
-                    console.log("Error occurred while signing in: ", error);
-                }
-            );    
-        }
+
         
-      });
-    </script>
-  </head>
-  
-  <body>
-    <div id="map"> </div>
-  </body>
-
+</body>
 </html>
