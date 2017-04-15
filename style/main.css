@@ -125,11 +125,48 @@ html, body {
 .monthly-trend-chart-wrapper > .monthly-trend-chart-top-div {
     width: 90%;
     height: 45px;
-    background-color: #987654;
+    /*background-color: #919191;*/
     margin: 10px auto 0;
-    text-align: center;
+    /*text-align: center;
     line-height: 45px;
-    font-size: 14px;
+    font-size: 14px;*/
+    display: flex;
+}
+
+.monthly-trend-chart-top-div > .monthly-trend-chart-title-div {
+    text-align: center;
+
+}
+
+.monthly-trend-chart-top-div > .dropdown-wrapper{
+    display: table;
+}
+
+.dropdown-wrapper > div.dropdown-div {
+    display: table-cell;
+    vertical-align: middle;
+}
+
+.monthly-trend-chart-top-div > .monthly-trend-chart-title-div {
+    width: 40%;
+    height: 100%;
+    display:flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 16px;
+    /*background-color: #987654;*/
+}
+
+.monthly-trend-chart-top-div > .monthly-trend-chart-data-layer-filter-wrapper {
+    width: 30%;
+    height: 100%;
+    /*background-color: #129876;*/
+}
+
+.monthly-trend-chart-top-div > .monthly-trend-chart-month-filter-wrapper {
+    width: 30%;
+    height: 100%;
+    /*background-color: #123456;*/
 }
 
 .monthly-trend-chart-wrapper > .monthly-trend-chart-div {
@@ -250,7 +287,10 @@ div.tooltip {
 }  
 
 select {
-    font-size: 17px;
+    font-size: 16px;
     height: 3rem;
     line-height: 3rem;
+    /*height: 90%;*/
+    width: 90%;
+    margin: auto;
 }

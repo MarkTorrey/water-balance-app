@@ -34,8 +34,8 @@
     <script src="//code.jquery.com/jquery-1.12.0.min.js"></script>
     <script src="./js/moment-with-locales.js"></script>
     <script src="//d3js.org/d3.v3.min.js"></script>
-    <script src="https://js.arcgis.com/3.16/"></script>
     <script src="https://s3-us-west-1.amazonaws.com/patterns.esri.com/files/calcite-web/1.0.0-rc.3/js/calcite-web.min.js"></script>
+    <script src="https://js.arcgis.com/3.16/"></script>
     <script src="./js/main.js"></script>
 </head>
 
@@ -88,13 +88,34 @@
 
         <div class="middle monthly-trend-chart-wrapper">
             <div class="monthly-trend-chart-top-div">
-                <select class="modifier-class">
-                    <option value="">January</option>
-                    <option value="">February</option>
-                    <option value="">March</option>
-                    <option value="">April</option>
-                    <option value="">May</option>
-                </select>
+
+                <div class="monthly-trend-chart-title-div"></div>
+
+                <div class="monthly-trend-chart-data-layer-filter-wrapper dropdown-wrapper">
+                    <div class="dropdown-div">
+                        <select class="modifier-class">
+                            <option value="">January</option>
+                            <option value="">February</option>
+                            <option value="">March</option>
+                            <option value="">April</option>
+                            <option value="">May</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="monthly-trend-chart-month-filter-wrapper dropdown-wrapper">
+                    <div class="dropdown-div">
+                        <select class="modifier-class">
+                            <option value="">January</option>
+                            <option value="">February</option>
+                            <option value="">March</option>
+                            <option value="">April</option>
+                            <option value="">May</option>
+                        </select>
+                    </div>
+                </div>
+
+
 
             </div>
             <div class="monthly-trend-chart-div"></div>

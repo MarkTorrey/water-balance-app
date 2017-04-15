@@ -14,6 +14,27 @@
     <link rel="stylesheet" href="//js.arcgis.com/3.16/esri/themes/calcite/dijit/calcite.css">
     <link rel="stylesheet" href="//js.arcgis.com/3.16/esri/themes/calcite/esri/esri.css">
 
+    <style>
+        #wrapper{
+            width: 100px;
+            height: 50px;
+            background-color: #9c9c9c;
+            display: table;
+        }
+
+        #foobar {
+            display: table-cell;
+            vertical-align: middle;
+            background-color: #123456;
+        }
+
+        select {
+            margin: auto;
+            font-size: 16px;
+            height: 80%;
+        }
+    </style>
+
     <script>
         var locationPath = location.origin + location.pathname.replace(/\/[^/]+$/, '');
         var dojoConfig = {
@@ -48,14 +69,16 @@
         </div>
     </nav>-->
 
-    <div style="width: 150px; height: 100px;">
+    <div id="wrapper">
+        <div id="foobar">
+            <select class="modifier-class">
+                <option value="">Menu 1</option>
+                <option value="">Menu 2</option>
+                <option value="">Menu 3</option>
+                <option value="">Menu 4</option>
+            </select>
+        </div>
 
-        <select class="modifier-class">
-            <option value="">Menu 1</option>
-            <option value="">Menu 2</option>
-            <option value="">Menu 3</option>
-            <option value="">Menu 4</option>
-        </select>
 
     </div>
 

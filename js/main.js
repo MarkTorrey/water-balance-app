@@ -576,7 +576,7 @@ require([
             .attr('stroke', function(d) { 
                 return getColorByKey(d.key);
             })
-            .attr('stroke-width', 1)
+            .attr('stroke-width', 2)
             .attr('fill', 'none');  
 
         // Define 'div' for tooltips
@@ -933,7 +933,7 @@ require([
 
     function highlightTrendLineByMonth(month){
 
-        // $(".monthly-trend-chart-top-div").text("Water Flux Trend - " + month);
+        $(".monthly-trend-chart-title-div").html("<b>Trend Analyzer</b>");
 
         d3.selectAll(".monthly-trend-line").style("opacity", 0.2);
         d3.selectAll(".monthly-trend-line").style("stroke-width", 1);
