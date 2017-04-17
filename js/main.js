@@ -81,6 +81,10 @@ require([
         initializeMapTimeAndZExtent();
     });
 
+    $(".month-select").change(trendChartDropdownSelectOnChangeHandler);
+
+    $(".data-layer-select").change(trendChartDropdownSelectOnChangeHandler);
+
     function getImageLayerDataByLocation(event){
 
         var identifyTaskInputGeometry = event.mapPoint;
@@ -401,6 +405,13 @@ require([
         } else {
             bottomPane.removeClass("visible");
         }
+    }
+
+    function trendChartDropdownSelectOnChangeHandler(){
+
+        var selectedMonth = $(".month-select").val();
+        
+        highlightTrendLineByMonth(selectedMonth);
     }
 
     function signInToArcGISPortal(){
@@ -933,7 +944,9 @@ require([
 
     function highlightTrendLineByMonth(month){
 
-        $(".monthly-trend-chart-title-div").html("<b>Trend Analyzer</b>");
+        // $(".monthly-trend-chart-title-div").html("Trend Analyzer");
+
+        var dataLayerType = $(".data-layer-select").val();
 
         d3.selectAll(".monthly-trend-line").style("opacity", 0.2);
         d3.selectAll(".monthly-trend-line").style("stroke-width", 1);
@@ -941,12 +954,14 @@ require([
         d3.selectAll(".monthly-trend-line").each(function(d){
             var lineElement = d3.select(this).node();
 
-            if(d.key === month){
+            if(d.key === month && d.dataType === dataLayerType){
                 // console.log("highlight", lineElement);
                 d3.select(lineElement).style("opacity", 1);
                 d3.select(lineElement).style("stroke-width", 3);
             } 
         });
+
+        $(".month-select").val(month);
     }
 
 

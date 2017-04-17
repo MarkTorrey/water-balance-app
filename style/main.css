@@ -157,13 +157,13 @@ html, body {
     /*background-color: #987654;*/
 }
 
-.monthly-trend-chart-top-div > .monthly-trend-chart-data-layer-filter-wrapper {
+.monthly-trend-chart-top-div > .monthly-trend-chart-data-layer-select-wrapper {
     width: 30%;
     height: 100%;
     /*background-color: #129876;*/
 }
 
-.monthly-trend-chart-top-div > .monthly-trend-chart-month-filter-wrapper {
+.monthly-trend-chart-top-div > .monthly-trend-chart-month-select-wrapper {
     width: 30%;
     height: 100%;
     /*background-color: #123456;*/
