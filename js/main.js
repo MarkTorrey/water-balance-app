@@ -127,18 +127,6 @@ require([
             });
 
         });
-
-        // executeIdentifyTask(identifyTaskInputGeometry, identifyTaskURLs[0].url, identifyTaskURLs[0].title).then(function(results){
-        //     console.log(results);
-        // });
-
-        // executeIdentifyTask(identifyTaskInputGeometry, identifyTaskURLs[1].url, identifyTaskURLs[1].title).then(function(results){
-        //     identifyTaskOnSuccessHandler(results);
-        // });
-
-        // executeIdentifyTask(identifyTaskInputGeometry, identifyTaskURLs[2].url, identifyTaskURLs[2].title).then(function(results){
-        //     identifyTaskOnSuccessHandler(results);
-        // });
     }
 
     function executeIdentifyTask(inputGeometry, identifyTaskURL, imageServiceTitle) {
@@ -154,7 +142,9 @@ require([
         // Set the geometry to the location of the view click
         imageServiceIdentifyTaskParams.geometry = inputGeometry;
 
-        imageServiceIdentifyTaskParams.timeExtent = getTimeExtent(953121600000, 1481803200000);
+        // imageServiceIdentifyTaskParams.timeExtent = getTimeExtent(953121600000, 1481803200000);
+
+        imageServiceIdentifyTaskParams.timeExtent = getTimeExtent(1263556800000, 1481803200000);
 
         imageServiceIdentifyTaskParams.mosaicRule = getMosaicRule(imageServiceTitle);
 
@@ -410,7 +400,7 @@ require([
     function trendChartDropdownSelectOnChangeHandler(){
 
         var selectedMonth = $(".month-select").val();
-        
+
         highlightTrendLineByMonth(selectedMonth);
     }
 
@@ -453,6 +443,14 @@ require([
             return d.stdTime;
         });
 
+        var uniqueYearValues = uniqueTimeValues.map(function(d){
+            return timeFormat(new Date(d));
+        });
+
+        uniqueYearValues = uniqueYearValues.filter(function(item, pos, self) {
+            return self.indexOf(item) == pos;
+        });
+
         var prevMouseXPosition = 0;
 
         var currentSelectedTimeValue;
@@ -478,7 +476,7 @@ require([
 
             domain.push(lowest, Math.ceil(highest));
 
-            console.log("domain for", key, domain);
+            // console.log("domain for", key, domain);
 
             return domain;
         }
@@ -509,7 +507,7 @@ require([
         var xAxis = d3.svg.axis()
             .scale(xScale)
             .orient("bottom")
-            .ticks(15)
+            .ticks(uniqueYearValues.length)
             .tickPadding(5)
             .innerTickSize(-(height - margin.top))
             .tickFormat(timeFormat);
@@ -948,17 +946,22 @@ require([
 
         var dataLayerType = $(".data-layer-select").val();
 
-        d3.selectAll(".monthly-trend-line").style("opacity", 0.2);
+        d3.selectAll(".monthly-trend-line").style("opacity", 0);
         d3.selectAll(".monthly-trend-line").style("stroke-width", 1);
 
         d3.selectAll(".monthly-trend-line").each(function(d){
             var lineElement = d3.select(this).node();
 
-            if(d.key === month && d.dataType === dataLayerType){
+            if(d.key !== month && d.dataType === dataLayerType){
+                d3.select(lineElement).style("opacity", 0.2);
+                d3.select(lineElement).style("stroke-width", 1);
+            }  
+            else if(d.key === month && d.dataType === dataLayerType){
                 // console.log("highlight", lineElement);
                 d3.select(lineElement).style("opacity", 1);
                 d3.select(lineElement).style("stroke-width", 3);
             } 
+
         });
 
         $(".month-select").val(month);
