@@ -772,45 +772,105 @@ require([
             $(".pie-chart-footnote-div").html("");
         }
 
-        var svg = d3.select(containerID)
-            .append("svg:svg").data([pieChartData])
-            .attr("width", width)
-            .attr("height", height)
-            .append("svg:g")
-            .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
+        // var svg = d3.select(containerID)
+        //     .append("svg:svg").data([pieChartData])
+        //     .attr("width", width)
+        //     .attr("height", height)
+        //     .append("svg:g")
+        //     .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
 
-        var pie = d3.layout.pie().value(function(d){return d.value;});
+        var svg = d3.select(containerID).append("svg")
+			.attr("width", width)
+			.attr("height", height)
+			.append("g")
+			.attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
 
-        // declare an arc generator function
-        var arc = d3.svg.arc().outerRadius(radius);
+		var pie = d3.layout.pie()
+            .sort(null)
+            .value(function(d){ return d.value; });
 
-        // select paths, use arc generator to draw
-        var arcs = svg.selectAll("g.slice")
-            .data(pie).enter()
-            .append("svg:g").attr("class", "slice");
+        var arc = d3.svg.arc()
+            .outerRadius(radius);
 
-        arcs.append("svg:path")
-            .attr("fill", function(d, i){
-                return getColorByKey(d.data.key);
-            })
-            .attr("d", function (d) {
-                // log the result of the arc generator to show how cool it is :)
-                // console.log(arc(d));
-                return arc(d);
+        var arcs = svg.selectAll(".arcs")
+            .data(pie(pieChartData))
+            .enter()
+            .append("g")
+            .attr("class", "arcs");
+
+        arcs.append("path")
+			.attr("d", arc)
+			.attr("fill", function(d){ 
+                return getColorByKey(d.data.key); 
             });
 
-        // add the text
-        arcs.append("svg:text")
-            .attr("transform", function(d){
+        arcs.append("text")
+			.attr("transform", function(d) { 
                 d.innerRadius = 0;
                 d.outerRadius = radius;
                 return "translate(" + arc.centroid(d) + ")";
             })
-            .attr("text-anchor", "middle")
-            .text( function(d, i) {
-                return (data[i].value) ? data[i].value + "mm": "";
+            .attr("class", "pie-chart-label")
+			.style("text-anchor", "middle")
+			.text(function(d) { 
+                return (d.data.value) ? d.data.value + "mm": ""; 
+            });
+
+        // var pie = d3.layout.pie().value(function(d){return d.value;});
+
+        // // declare an arc generator function
+        // var arc = d3.svg.arc().outerRadius(radius);
+
+        // // select paths, use arc generator to draw
+        // var arcs = svg.selectAll("g.slice")
+        //     .data(pie).enter()
+        //     .append("svg:g").attr("class", "slice");
+
+        // arcs.append("svg:path")
+        //     .attr("fill", function(d, i){
+        //         return getColorByKey(d.data.key);
+        //     })
+        //     .attr("d", function (d) {
+        //         // log the result of the arc generator to show how cool it is :)
+        //         // console.log(arc(d));
+        //         return arc(d);
+        //     });
+
+        // // add the text
+        // arcs.append("svg:text")
+        //     .attr("transform", function(d){
+        //         d.innerRadius = 0;
+        //         d.outerRadius = radius;
+        //         return "translate(" + arc.centroid(d) + ")";
+        //     })
+        //     .attr("text-anchor", "middle")
+        //     .text( function(d, i) {
+        //         return (data[i].value) ? data[i].value + "mm": "";
+        //     }
+        // );  
+
+        // updatePieChart();
+    }
+
+    function updatePieChart(){
+
+        var data = [
+            {
+                "key":"Runoff",
+                "value":145
+            },
+            {
+                "key":"Evapotranspiration",
+                "value":145
             }
-        );
+        ];
+
+        var pie = d3.layout.pie().value(function(d){return d;})(data);
+
+        var path = d3.select(".slice").selectAll("path").data(pie);
+
+        path.transition().duration(1000)
+
     }
 
     function createMonthlyTrendChart(data){
