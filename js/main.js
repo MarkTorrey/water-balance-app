@@ -97,23 +97,42 @@ require([
 
             if(results.key === "Runoff"){
                 app.runoffData = results;
-            } else {
-                
-                chartData.push(results);
-
-                if(chartData.length === 2){
-
-                    domClass.remove(document.body, "app-loading");
-                
-                    toggleBottomPane(true);
-
-                    createLineChart(chartData);
-
-                    createMonthlyTrendChart(chartData);
-
-                    // createPieChart();
-                }
             } 
+            // else {
+            //     chartData.push(results);
+
+            //     if(chartData.length === 2){
+
+            //         domClass.remove(document.body, "app-loading");
+                
+            //         toggleBottomPane(true);
+
+            //         createLineChart(chartData);
+
+            //         createMonthlyTrendChart(chartData);
+
+            //         // createPieChart();
+            //     }
+            // } 
+
+            chartData.push(results);
+
+            if(chartData.length === identifyTaskURLs.length){
+
+                domClass.remove(document.body, "app-loading");
+
+                chartData = chartData.filter(function(d){
+                    return d.key !== "Runoff"
+                })
+            
+                toggleBottomPane(true);
+
+                createMonthlyTrendChart(chartData);
+
+                createLineChart(chartData);
+
+                // createPieChart();
+            }
         };
 
         domClass.add(document.body, "app-loading");
@@ -680,13 +699,32 @@ require([
 
             currentSelectedTimeValue = closestTimeValue;
 
-            highlightTrendLineByMonth(timeFormatFullMonthName(new Date(closestTimeValue)));
-
-            getPieChartDataByTime(currentSelectedTimeValue);
+            highlightTrendLineByMonth(timeFormatFullMonthName(new Date(currentSelectedTimeValue)));
             
+            getPieChartDataByTime(currentSelectedTimeValue);
+
             setTimeout(function(){
                 prevMouseXPosition = mousePositionX;
             }, 500);
+        }
+
+        function updateMapAndChartByTime(time){
+            var startDate = new Date(time);
+            var endDate = getEndTimeValue(startDate);
+
+            updateMapTimeInfo(startDate, endDate);
+
+            highlightTrendLineByMonth(timeFormatFullMonthName(startDate));
+            
+            getPieChartDataByTime(time);
+
+            highlightRefLine.attr("transform", function () {
+                return "translate(" + xScale(time) + ", 0)";
+            });  
+
+            highlightRefLine.style("display", null); 
+
+            // console.log("update map and chart", startDate, endDate);
         }
 
         function getChartDataByTime(time, inputData){
@@ -742,6 +780,8 @@ require([
                 updatePieChart(pieChartData);
             }
         }
+
+        updateMapAndChartByTime(uniqueTimeValues[0]);
     }
 
     function createPieChart(data){
@@ -815,7 +855,9 @@ require([
             .data(pie(dataset))
             .enter().append("path")
             .attr("class", "arc")
-            .attr("fill", function(d, i) { return d.data.color; })
+            .attr("fill", function(d, i) { 
+                return getColorByKey(d.data.key); 
+            })
             .attr("d", arc)
             .each(function(d) { 
                 this._current = d; 
@@ -827,9 +869,9 @@ require([
 
             path.enter().append("path")
                 .attr("class", "arc")
-                .attr("fill", function (d, i) {
-                    return d.data.color;
-                })
+                // .attr("fill", function (d, i) {
+                //     return d.data.color;
+                // })
                 .attr("d", arc(enterAntiClockwise))
                 .each(function (d) {
                     this._current = {
@@ -992,8 +1034,7 @@ require([
             .attr('stroke-width', 1)
             .attr('fill', 'none');  
 
-
-        highlightTrendLineByMonth("January");
+        // highlightTrendLineByMonth("January");
     }
 
     function highlightTrendLineByMonth(month){
