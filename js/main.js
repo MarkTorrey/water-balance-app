@@ -78,7 +78,7 @@ require([
 
         app.map.on("click", getImageLayerDataByLocation);
 
-        setOperationalLayersVisibility(app.isWaterStorageChartVisible);
+        setOperationalLayersVisibility();
 
         initializeMapTimeAndZExtent();
     });
@@ -86,6 +86,22 @@ require([
     $(".month-select").change(trendChartDropdownSelectOnChangeHandler);
 
     $(".data-layer-select").change(trendChartDropdownSelectOnChangeHandler);
+
+    $(".layer-control-wrapper > div").on("click", function(d){
+        
+        $(this).addClass("active");
+        $(this).siblings().removeClass("active");
+
+        var targetLayer = $(this).attr("target-layer");
+
+        if(targetLayer === "precipitation"){
+            app.isWaterStorageChartVisible = false;
+        } else {
+            app.isWaterStorageChartVisible = true;
+        }
+
+        setOperationalLayersVisibility();
+    });
 
     function getImageLayerDataByLocation(event){
 
@@ -305,12 +321,12 @@ require([
 
         updateMapTimeInfo(startTime, endTime);
 
-        console.log(visibleLayer);
+        // console.log(visibleLayer);
 
         // console.log(visibleLayerTimeInfo.timeExtent[0], visibleLayerTimeInfo.timeExtent[1]);
     }
 
-    function setOperationalLayersVisibility(isWaterStorageChartVisible){
+    function setOperationalLayersVisibility(){
 
         var soilMoistureLayer = app.webMapItems.operationalLayers.filter(function(d){
             return d.layerObject.name === "GLDAS_SoilMoisture"; 
@@ -320,12 +336,12 @@ require([
             return d.layerObject.name === "GLDAS_Precipitation";
         })[0];
 
-        if(isWaterStorageChartVisible) {
-            soilMoistureLayer.layerObject.setVisibility(true);
-            precipLayer.layerObject.setVisibility(false);
+        if(app.isWaterStorageChartVisible) {
+            soilMoistureLayer.layerObject.show();
+            precipLayer.layerObject.hide();
         } else {
-            soilMoistureLayer.layerObject.setVisibility(false);
-            precipLayer.layerObject.setVisibility(true);
+            soilMoistureLayer.layerObject.hide();
+            precipLayer.layerObject.show();
         }
     }
 

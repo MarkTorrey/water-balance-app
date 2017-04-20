@@ -96,6 +96,35 @@ html, body {
     background : url(../images/loading.gif) no-repeat center center;
 }
 
+.layer-control-wrapper {
+    height: 40px;
+    width: 250px;
+    background-color: #efefef;
+    top: 65px;
+    right: 15px;
+    position: absolute;
+    display: -webkit-flex;
+    display: flex;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.layer-control-wrapper > div {
+    width: 50%;
+    height: 100%;
+    padding: 8px;
+    color: #303030;
+    font-size: 15px;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    cursor: pointer;
+}
+
+.layer-control-wrapper > div.active {
+    background-color: #0079c1;
+    color: #fff;
+}
+
 .bottom-pane {
     position: absolute;
     width: 100%;

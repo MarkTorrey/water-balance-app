@@ -15,24 +15,33 @@
     <link rel="stylesheet" href="//js.arcgis.com/3.16/esri/themes/calcite/esri/esri.css">
 
     <style>
-        #wrapper{
-            width: 100px;
-            height: 50px;
-            background-color: #9c9c9c;
-            display: table;
+        .layer-control-wrapper {
+            height: 40px;
+            width: 250px;
+            background-color: #efefef;
+            top: 50px;
+            left: 50px;
+            position: absolute;
+            display: -webkit-flex;
+            display: flex;
         }
 
-        #foobar {
-            display: table-cell;
-            vertical-align: middle;
-            background-color: #123456;
+        .layer-control-wrapper > div {
+            width: 50%;
+            height: 100%;
+            padding: 8px;
+            color: #303030;
+            font-size: 15px;
+            display:flex;
+            justify-content:center;
+            align-items:center;
         }
 
-        select {
-            margin: auto;
-            font-size: 16px;
-            height: 80%;
+        .layer-control-wrapper > div.active {
+            background-color: #0079c1;
+            color: #fff;
         }
+
     </style>
 
     <script>
@@ -69,17 +78,13 @@
         </div>
     </nav>-->
 
-    <div id="wrapper">
-        <div id="foobar">
-            <select class="modifier-class">
-                <option value="">Menu 1</option>
-                <option value="">Menu 2</option>
-                <option value="">Menu 3</option>
-                <option value="">Menu 4</option>
-            </select>
+    <div class="layer-control-wrapper">
+        <div class="active">
+            <span>Soil Moisture</span>
         </div>
-
-
+        <div>
+            <span>Precipitation</span>
+        </div>
     </div>
 
 
