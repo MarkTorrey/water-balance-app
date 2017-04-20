@@ -78,6 +78,8 @@ require([
 
         app.map.on("click", getImageLayerDataByLocation);
 
+        setOperationalLayersVisibility(app.isWaterStorageChartVisible);
+
         initializeMapTimeAndZExtent();
     });
 
@@ -303,7 +305,28 @@ require([
 
         updateMapTimeInfo(startTime, endTime);
 
+        console.log(visibleLayer);
+
         // console.log(visibleLayerTimeInfo.timeExtent[0], visibleLayerTimeInfo.timeExtent[1]);
+    }
+
+    function setOperationalLayersVisibility(isWaterStorageChartVisible){
+
+        var soilMoistureLayer = app.webMapItems.operationalLayers.filter(function(d){
+            return d.layerObject.name === "GLDAS_SoilMoisture"; 
+        })[0];
+
+        var precipLayer = app.webMapItems.operationalLayers.filter(function(d){
+            return d.layerObject.name === "GLDAS_Precipitation";
+        })[0];
+
+        if(isWaterStorageChartVisible) {
+            soilMoistureLayer.layerObject.setVisibility(true);
+            precipLayer.layerObject.setVisibility(false);
+        } else {
+            soilMoistureLayer.layerObject.setVisibility(false);
+            precipLayer.layerObject.setVisibility(true);
+        }
     }
 
     function setZExtentForImageLayer(layer){
@@ -752,8 +775,6 @@ require([
             highlightTrendLineByMonth(timeFormatFullMonthName(startDate));
             
             getPieChartDataByTime(time);
-
-
 
             // console.log("update map and chart", startDate, endDate);
         }
