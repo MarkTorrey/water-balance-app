@@ -474,7 +474,9 @@ require([
 
         var prevMouseXPosition = 0;
 
-        var currentSelectedTimeValue;
+        var currentTimeValueByMousePosition;
+
+        var highlightTimeValue = uniqueTimeValues[0];
 
         var getDomainFromData = function(values, key){
 
@@ -640,6 +642,37 @@ require([
             .attr("stroke-width", "0.5")
             .attr('class', 'highlightRefLine');
 
+        var highlightRefLineLabel = svg.append("g")
+            .attr("class", "highlightRefLineLabel")
+            .attr("transform", "translate(0, -20)");
+
+        var highlightRefLineLabelRect = highlightRefLineLabel.append('rect')
+            .attr('width', 60)
+            .attr('height', 20)
+            .attr("transform", "translate(-30, 0)")
+            .attr('class', 'highlightRefLineLabelRect')
+            .style('opacity', 0.7)
+            .style('fill', 'red');
+
+        var highlightRefLineLabelText =highlightRefLineLabel.append("text")
+            .attr('class', 'highlightRefLineLabeltext')
+            .attr("dy", "15")
+            .attr("text-anchor", "middle")
+            // .text("Jan 2010")
+            .style('fill', '#fff')
+            .style("cursor", 'crosshair');
+
+        // var highlightRefLineLabelRect = svg.append('rect')
+        //     .attr('x', 0)
+        //     .attr('y', -20)
+        //     .attr('width', 70)
+        //     .attr('height', 20)
+        //     .attr('class', 'highlightRefLineLabelRect')
+        //     .style('opacity', 0.7)
+        //     .style('fill', 'red');
+        //     // .style("cursor", 'crosshair')
+        //     // .call(drag);   
+
         svg.append("rect")
             .attr("class", "overlay")
             .attr("width", width)
@@ -651,22 +684,12 @@ require([
             .on("mouseout", function() { 
                 verticalLine.style("display", "none"); 
                 tooltipDiv.style("display", "none"); 
-                getPieChartDataByTime(currentSelectedTimeValue);
+                updateMapAndChartByTime(highlightTimeValue);
             })
             .on("mousemove", mousemove)
             .on('click', function(){
-                var startDate = new Date(currentSelectedTimeValue);
-                var endDate = getEndTimeValue(currentSelectedTimeValue);
-                
-                updateMapTimeInfo(startDate, endDate);
-
-                highlightRefLine.attr("transform", function () {
-                    return "translate(" + xScale(currentSelectedTimeValue) + ", 0)";
-                });  
-
-                highlightRefLine.style("display", null); 
-
-                // getPieChartDataByTime(currentSelectedTimeValue);
+                highlightTimeValue = currentTimeValueByMousePosition;
+                updateMapAndChartByTime(highlightTimeValue);
             });  
 
         function mousemove(){
@@ -683,7 +706,7 @@ require([
 
             var tooltipX = (mousePositionX > prevMouseXPosition) ? d3.event.pageX - 160 : (d3.event.pageX + 50 < container.width()) ?  d3.event.pageX + 5 : d3.event.pageX - 160;
 
-            // console.log(mousePositionX, container.width());
+            currentTimeValueByMousePosition = closestTimeValue;
 
             d3.select(".verticalLine").attr("transform", function () {
                 return "translate(" + xScale(closestTimeValue) + ", 0)";
@@ -697,11 +720,9 @@ require([
                 .style("left", Math.max(0, tooltipX) + "px")
                 .style("top", (d3.event.pageY - 50) + "px");   
 
-            currentSelectedTimeValue = closestTimeValue;
-
-            highlightTrendLineByMonth(timeFormatFullMonthName(new Date(currentSelectedTimeValue)));
+            highlightTrendLineByMonth(timeFormatFullMonthName(new Date(closestTimeValue)));
             
-            getPieChartDataByTime(currentSelectedTimeValue);
+            getPieChartDataByTime(closestTimeValue);
 
             setTimeout(function(){
                 prevMouseXPosition = mousePositionX;
@@ -712,17 +733,27 @@ require([
             var startDate = new Date(time);
             var endDate = getEndTimeValue(startDate);
 
+            var xPosByTime = xScale(time);
+
+            highlightRefLine.attr("transform", function () {
+                return "translate(" + xPosByTime + ", 0)";
+            });  
+
+            highlightRefLine.style("display", null); 
+
+            highlightRefLineLabel.attr("transform", function () {
+                return "translate(" + xPosByTime + ", -20)";
+            });  
+
+            highlightRefLineLabelText.text(timeFormatWithMonth(startDate));
+
             updateMapTimeInfo(startDate, endDate);
 
             highlightTrendLineByMonth(timeFormatFullMonthName(startDate));
             
             getPieChartDataByTime(time);
 
-            highlightRefLine.attr("transform", function () {
-                return "translate(" + xScale(time) + ", 0)";
-            });  
 
-            highlightRefLine.style("display", null); 
 
             // console.log("update map and chart", startDate, endDate);
         }
@@ -781,7 +812,7 @@ require([
             }
         }
 
-        updateMapAndChartByTime(uniqueTimeValues[0]);
+        updateMapAndChartByTime(highlightTimeValue);
     }
 
     function createPieChart(data){
