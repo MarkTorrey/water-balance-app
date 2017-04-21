@@ -653,6 +653,37 @@ require([
             .attr("stroke", "#909090")
             .attr('class', 'verticalLine');
 
+        var drag = d3.behavior.drag()
+            .on("drag", dragmove)
+            .on("dragend", dragend);
+
+        function dragmove(d){
+            var xPos = d3.event.x;
+            var yPos = d3.event.y;
+
+            var xValueByMousePosition = xScale.invert(xPos).getTime();
+
+            var closestTimeValue = getClosestValue(xValueByMousePosition, uniqueTimeValues);
+
+            var xPosByClosestTimeValue = xScale(closestTimeValue);
+
+            highlightTimeValue = closestTimeValue;
+
+            d3.select(".highlightRefLineLabel").attr("transform", function () {
+                return "translate(" + xPosByClosestTimeValue + ", -20)";
+            }); 
+
+            d3.select(".highlightRefLine").attr("transform", function () {
+                return "translate(" + xPosByClosestTimeValue + ", 0)";
+            });  
+
+            d3.select(".highlightRefLineLabeltext").text(timeFormatWithMonth(new Date(closestTimeValue)));
+        }
+
+        function dragend(d){
+            updateMapAndChartByTime(highlightTimeValue);
+        }        
+
         //drwa the vertical reference line    
         var highlightRefLine = svg.append('line')
             .attr({
@@ -668,7 +699,8 @@ require([
 
         var highlightRefLineLabel = svg.append("g")
             .attr("class", "highlightRefLineLabel")
-            .attr("transform", "translate(0, -20)");
+            .attr("transform", "translate(0, -20)")
+            .call(drag);
 
         var highlightRefLineLabelRect = highlightRefLineLabel.append('rect')
             .attr('width', 60)
@@ -871,7 +903,7 @@ require([
                 return d.key === "Added to Storage";
             });
 
-            $(".pie-chart-footnote-div").html("<span>" + Math.abs(surfaceChangingStorageData[0].value) + " mm taken out of storage" + "</span>")
+            $(".pie-chart-footnote-div").html("<span>" + Math.abs(surfaceChangingStorageData[0].value) + "mm lost from storage" + "</span>")
         } else {
             $(".pie-chart-footnote-div").html("");
         }
