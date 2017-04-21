@@ -68,13 +68,13 @@ require([
 
         connect.disconnect(response.clickEventHandle);
 
-        app.map.on("update-start", function () {
-          domClass.add(document.body, "app-loading");
-        });
+        // app.map.on("update-start", function () {
+        //   domClass.add(document.body, "app-loading");
+        // });
 
-        app.map.on("update-end", function () {
-          domClass.remove(document.body, "app-loading");
-        });
+        // app.map.on("update-end", function () {
+        //   domClass.remove(document.body, "app-loading");
+        // });
 
         app.map.on("click", getImageLayerDataByLocation);
 
@@ -746,8 +746,9 @@ require([
 
             highlightTrendLineByMonth(timeFormatFullMonthName(new Date(closestTimeValue)));
             
+            getPieChartDataByTime(closestTimeValue);
+
             setTimeout(function(){
-                getPieChartDataByTime(closestTimeValue);
                 prevMouseXPosition = mousePositionX;
             }, 500);
         }
