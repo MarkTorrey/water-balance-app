@@ -113,27 +113,11 @@ require([
 
         var identifyTaskOnSuccessHandler = function(results){
 
+            chartData.push(results);
+
             if(results.key === "Runoff"){
                 app.runoffData = results;
             } 
-            // else {
-            //     chartData.push(results);
-
-            //     if(chartData.length === 2){
-
-            //         domClass.remove(document.body, "app-loading");
-                
-            //         toggleBottomPane(true);
-
-            //         createLineChart(chartData);
-
-            //         createMonthlyTrendChart(chartData);
-
-            //         // createPieChart();
-            //     }
-            // } 
-
-            chartData.push(results);
 
             if(chartData.length === identifyTaskURLs.length){
 
@@ -149,7 +133,6 @@ require([
 
                 createLineChart(chartData);
 
-                // createPieChart();
             }
         };
 
@@ -490,6 +473,8 @@ require([
         var container = $(containerID);
 
         container.empty();
+
+        $("tooltip").remove();
 
         // console.log(data);
 
@@ -832,7 +817,7 @@ require([
             });
 
             var surfaceChangingStorageData = {
-                "key": "Surface Changing Storage",
+                "key": "Added to Storage",
                 "value": precipData[0].value - evapoData[0].value - runoffData[0].value
             };
 
@@ -883,7 +868,7 @@ require([
         if(pieChartData.length < 3){
             //the value of surface changing storage is negtive, add a note to pie chart
             var surfaceChangingStorageData = data.filter(function(d){
-                return d.key === "Surface Changing Storage";
+                return d.key === "Added to Storage";
             });
 
             $(".pie-chart-footnote-div").html("<span>" + Math.abs(surfaceChangingStorageData[0].value) + " mm taken out of storage" + "</span>")
@@ -904,6 +889,8 @@ require([
             startAngle: Math.PI * 2,
             endAngle: Math.PI * 2
         };
+
+        var tooltip = d3.select("body").append("div").attr("class", "pie-chart-tooltip");
 
         var svg = d3.select(chartContainerID).append("svg")
             .attr("width", this.width)
@@ -928,9 +915,33 @@ require([
             })
             .attr("d", arc)
             .each(function(d) { 
+                // store the initial values
                 this._current = d; 
-            }); // store the initial values
+            })
+            .on("mousemove", function(d){
+                tooltip.style("left", d3.event.pageX+10+"px");
+                tooltip.style("top", d3.event.pageY-25+"px");
+                tooltip.style("display", "inline-block");
+                tooltip.html(d.data.key + ": " + d.data.value + " mm");
+            })
+            .on("mouseover", function(d){
+                
+                console.log(d.data.key);
 
+                d3.selectAll(".arc").each(function(item){
+                    var arcElement = d3.select(this).node();
+                    if(item.data.key === d.data.key){
+                        d3.select(arcElement).style("opacity", 1);
+                    } else {
+                        d3.select(arcElement).style("opacity", 0.6);
+                    }
+                });
+            })
+            .on("mouseout", function(d){
+                d3.selectAll(".arc").style("opacity", 1);
+                tooltip.style("display", "none");
+            });
+        
         this.update = function(data){
 
             path = path.data(pie(data));
@@ -940,7 +951,7 @@ require([
                 // .attr("fill", function (d, i) {
                 //     return d.data.color;
                 // })
-                .attr("d", arc(enterAntiClockwise))
+                .attr("d", arc)
                 .each(function (d) {
                     this._current = {
                         data: d.data,
@@ -1147,7 +1158,7 @@ require([
             case "Runoff":
                 color = "#ADD9F4"
                 break;
-            case "Surface Changing Storage":
+            case "Added to Storage":
                 color = "#468C98"
                 break;
         }
