@@ -746,9 +746,8 @@ require([
 
             highlightTrendLineByMonth(timeFormatFullMonthName(new Date(closestTimeValue)));
             
-            getPieChartDataByTime(closestTimeValue);
-
             setTimeout(function(){
+                getPieChartDataByTime(closestTimeValue);
                 prevMouseXPosition = mousePositionX;
             }, 500);
         }
@@ -907,7 +906,7 @@ require([
             .value(function(d){ return d.value; });
         
         var path = svg.selectAll("path")
-            .data(pie(dataset))
+            .data(pie([]))
             .enter().append("path")
             .attr("class", "arc")
             .attr("fill", function(d, i) { 
@@ -917,30 +916,30 @@ require([
             .each(function(d) { 
                 // store the initial values
                 this._current = d; 
-            })
-            .on("mousemove", function(d){
-                tooltip.style("left", d3.event.pageX+10+"px");
-                tooltip.style("top", d3.event.pageY-25+"px");
-                tooltip.style("display", "inline-block");
-                tooltip.html(d.data.key + ": " + d.data.value + " mm");
-            })
-            .on("mouseover", function(d){
-                
-                console.log(d.data.key);
-
-                d3.selectAll(".arc").each(function(item){
-                    var arcElement = d3.select(this).node();
-                    if(item.data.key === d.data.key){
-                        d3.select(arcElement).style("opacity", 1);
-                    } else {
-                        d3.select(arcElement).style("opacity", 0.6);
-                    }
-                });
-            })
-            .on("mouseout", function(d){
-                d3.selectAll(".arc").style("opacity", 1);
-                tooltip.style("display", "none");
             });
+            // .on("mousemove", function(d){
+            //     tooltip.style("left", d3.event.pageX+10+"px");
+            //     tooltip.style("top", d3.event.pageY-25+"px");
+            //     tooltip.style("display", "inline-block");
+            //     tooltip.html(d.data.key + ": " + d.data.value + " mm");
+            // })
+            // .on("mouseover", function(d){
+                
+            //     console.log(d.data.key);
+
+            //     d3.selectAll(".arc").each(function(item){
+            //         var arcElement = d3.select(this).node();
+            //         if(item.data.key === d.data.key){
+            //             d3.select(arcElement).style("opacity", 1);
+            //         } else {
+            //             d3.select(arcElement).style("opacity", 0.6);
+            //         }
+            //     });
+            // })
+            // .on("mouseout", function(d){
+            //     d3.selectAll(".arc").style("opacity", 1);
+            //     tooltip.style("display", "none");
+            // });
         
         this.update = function(data){
 
@@ -974,7 +973,29 @@ require([
             var i = d3.interpolate(this._current, a);
             this._current = i(0);
 
-            d3.select(this).attr("fill", getColorByKey(this._current.data.key));
+            d3.select(this)
+                .attr("fill", getColorByKey(this._current.data.key))
+                .on("mousemove", function(d){
+                    tooltip.style("left", d3.event.pageX+10+"px");
+                    tooltip.style("top", d3.event.pageY-25+"px");
+                    tooltip.style("display", "inline-block");
+                    tooltip.html(d.data.key + ": " + d.data.value + " mm");
+                })
+                .on("mouseover", function(d){
+
+                    d3.selectAll(".arc").each(function(item){
+                        var arcElement = d3.select(this).node();
+                        if(item.data.key === d.data.key){
+                            d3.select(arcElement).style("opacity", 1);
+                        } else {
+                            d3.select(arcElement).style("opacity", 0.6);
+                        }
+                    });
+                })
+                .on("mouseout", function(d){
+                    d3.selectAll(".arc").style("opacity", 1);
+                    tooltip.style("display", "none");
+                });
 
             return function(t) {
                 return arc(i(t));
@@ -988,6 +1009,8 @@ require([
                 return arc(i(t));
             };
         }
+
+        this.update(dataset);
     }
 
     function createMonthlyTrendChart(data){
