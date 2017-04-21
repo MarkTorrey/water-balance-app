@@ -951,7 +951,7 @@ require([
                 // .attr("fill", function (d, i) {
                 //     return d.data.color;
                 // })
-                .attr("d", arc)
+                .attr("d", arc(enterAntiClockwise))
                 .each(function (d) {
                     this._current = {
                         data: d.data,
