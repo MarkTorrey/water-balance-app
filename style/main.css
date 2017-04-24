@@ -150,7 +150,7 @@ html, body {
 
 .bottom-pane > div.monthly-trend-chart-wrapper {
     background-color: #f2f2f2;
-    width: 450px;
+    width: 400px;
 }
 
 .monthly-trend-chart-wrapper > .monthly-trend-chart-top-div {
@@ -272,9 +272,9 @@ html, body {
 }
 
 .bottom-pane > div.line-chart-wrapper {
-    width: -webkit-calc(100% - 700px);
-    width:    -moz-calc(100% - 700px);
-    width:         calc(100% - 700px);
+    width: -webkit-calc(100% - 650px);
+    width:    -moz-calc(100% - 650px);
+    width:         calc(100% - 650px);
 }
 
 @media (max-width: 767px){

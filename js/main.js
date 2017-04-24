@@ -68,14 +68,6 @@ require([
 
         connect.disconnect(response.clickEventHandle);
 
-        // app.map.on("update-start", function () {
-        //   domClass.add(document.body, "app-loading");
-        // });
-
-        // app.map.on("update-end", function () {
-        //   domClass.remove(document.body, "app-loading");
-        // });
-
         app.map.on("click", getImageLayerDataByLocation);
 
         setOperationalLayersVisibility();
@@ -101,6 +93,12 @@ require([
         }
 
         setOperationalLayersVisibility();
+    });
+
+    $(window).resize(function() {
+        if(app.lineChart){
+            app.lineChart.resize();
+        }
     });
 
     function getImageLayerDataByLocation(event){
@@ -131,7 +129,7 @@ require([
 
                 createMonthlyTrendChart(chartData);
 
-                createLineChart(chartData);
+                app.lineChart = new LineChart(chartData);
 
             }
         };
@@ -293,19 +291,14 @@ require([
     function initializeMapTimeAndZExtent(){
 
         var visibleLayer = getWebMapLayerByVisibility();
-
         var visibleLayerTimeInfo = getImageLayerTimeInfo(visibleLayer);
-
         var startTime = convertUnixValueToTime(visibleLayerTimeInfo.timeExtent[0]);
-
         var endTime = getEndTimeValue(startTime);
 
         setZExtentForImageLayer(visibleLayer);
-
         updateMapTimeInfo(startTime, endTime);
 
         // console.log(visibleLayer);
-
         // console.log(visibleLayerTimeInfo.timeExtent[0], visibleLayerTimeInfo.timeExtent[1]);
     }
 
@@ -353,7 +346,6 @@ require([
         var visibleLayers = app.webMapItems.operationalLayers.filter(function(d){
             return d.visibility === true;
         });
-
         return visibleLayers[0];
     }
 
@@ -365,16 +357,13 @@ require([
                 "url": d.url
             };
         });
-
         return operationalLayersURL;
     }
 
     function getImageLayerTimeInfo(layer){
 
         var timeInfo = layer.resourceInfo.timeInfo;
-
         app.timeExtent = timeInfo.timeExtent;
-
         return timeInfo;
     }
 
@@ -466,7 +455,7 @@ require([
         );    
     }
 
-    function createLineChart(data){
+    function LineChart(data){
 
         var containerID = ".line-chart-wrapper";
 
@@ -657,33 +646,6 @@ require([
             .on("drag", dragmove)
             .on("dragend", dragend);
 
-        function dragmove(d){
-            var xPos = d3.event.x;
-            var yPos = d3.event.y;
-
-            var xValueByMousePosition = xScale.invert(xPos).getTime();
-
-            var closestTimeValue = getClosestValue(xValueByMousePosition, uniqueTimeValues);
-
-            var xPosByClosestTimeValue = xScale(closestTimeValue);
-
-            highlightTimeValue = closestTimeValue;
-
-            d3.select(".highlightRefLineLabel").attr("transform", function () {
-                return "translate(" + xPosByClosestTimeValue + ", -20)";
-            }); 
-
-            d3.select(".highlightRefLine").attr("transform", function () {
-                return "translate(" + xPosByClosestTimeValue + ", 0)";
-            });  
-
-            d3.select(".highlightRefLineLabeltext").text(timeFormatWithMonth(new Date(closestTimeValue)));
-        }
-
-        function dragend(d){
-            updateMapAndChartByTime(highlightTimeValue);
-        }        
-
         //drwa the vertical reference line    
         var highlightRefLine = svg.append('line')
             .attr({
@@ -747,6 +709,34 @@ require([
                 highlightTimeValue = currentTimeValueByMousePosition;
                 updateMapAndChartByTime(highlightTimeValue);
             });  
+
+        function dragmove(d){
+
+            var xPos = d3.event.x;
+            var yPos = d3.event.y;
+
+            var xValueByMousePosition = xScale.invert(xPos).getTime();
+
+            var closestTimeValue = getClosestValue(xValueByMousePosition, uniqueTimeValues);
+
+            var xPosByClosestTimeValue = xScale(closestTimeValue);
+
+            highlightTimeValue = closestTimeValue;
+
+            d3.select(".highlightRefLineLabel").attr("transform", function () {
+                return "translate(" + xPosByClosestTimeValue + ", -20)";
+            }); 
+
+            d3.select(".highlightRefLine").attr("transform", function () {
+                return "translate(" + xPosByClosestTimeValue + ", 0)";
+            });  
+
+            d3.select(".highlightRefLineLabeltext").text(timeFormatWithMonth(new Date(closestTimeValue)));
+        }
+
+        function dragend(d){
+            updateMapAndChartByTime(highlightTimeValue);
+        }    
 
         function mousemove(){
 
@@ -866,23 +856,25 @@ require([
             }
         }
 
+        this.resize = function(){
+            console.log("margin", margin);
+        }
+
         updateMapAndChartByTime(highlightTimeValue);
+
     }
 
     function createPieChart(data){
         
         var containerID = ".pie-chart-div";
-
         var container = $(containerID);
-
-        container.empty();
 
         // Set the dimensions of the canvas / graph
         var width = container.width();
         var height = container.height();
-
         var radius = Math.min(width, height) / 2;
 
+        container.empty();
         app.pieChart = new PieChart(containerID, width, height, radius, getPieChartData(data));
     }
 

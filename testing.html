@@ -15,31 +15,31 @@
     <link rel="stylesheet" href="//js.arcgis.com/3.16/esri/themes/calcite/esri/esri.css">
 
     <style>
-        .layer-control-wrapper {
-            height: 40px;
-            width: 250px;
-            background-color: #efefef;
-            top: 50px;
-            left: 50px;
+        .bottom-pane {
             position: absolute;
-            display: -webkit-flex;
+            width: 100%;
+            height: 300px;
+            bottom: 0;
+            left: 0;
+            background-color: #fff;
+            z-index: 1000;
             display: flex;
         }
 
-        .layer-control-wrapper > div {
-            width: 50%;
-            height: 100%;
-            padding: 8px;
-            color: #303030;
-            font-size: 15px;
-            display:flex;
-            justify-content:center;
-            align-items:center;
+        .bottom-pane > div.pie-chart-wrapper {
+            background-color: #909090;
+            width: 250px;
         }
 
-        .layer-control-wrapper > div.active {
-            background-color: #0079c1;
-            color: #fff;
+        .bottom-pane > div.monthly-trend-chart-wrapper {
+            background-color: #606060;
+            width: 450px;
+        }
+
+        .bottom-pane > div.line-chart-wrapper {
+            width: -webkit-calc(100% - 700px);
+            width:    -moz-calc(100% - 700px);
+            width:         calc(100% - 700px);
         }
 
     </style>
@@ -70,21 +70,10 @@
 
 <body class="calcite">
     
-    <!--<nav class="navbar-fixed-top">
-        <div class="navbar-title">
-            <span class="title-main">Water Balance App</span>
-            <span class="title-divider hidden-xs"></span>
-            <span class="title-sub hidden-xs">Click anywhere on earth and see how climate change is affecting the water balance</span>
-        </div>
-    </nav>-->
-
-    <div class="layer-control-wrapper">
-        <div class="active">
-            <span>Soil Moisture</span>
-        </div>
-        <div>
-            <span>Precipitation</span>
-        </div>
+    <div class="bottom-pane">
+        <div class="left pie-chart-wrapper"></div>
+        <div class="middle line-chart-wrapper"></div>
+        <div class="right monthly-trend-chart-wrapper"></div>
     </div>
 
 
