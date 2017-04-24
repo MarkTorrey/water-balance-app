@@ -457,7 +457,7 @@ require([
 
     function LineChart(data){
 
-        var containerID = ".line-chart-wrapper";
+        var containerID = ".line-chart-div";
 
         var container = $(containerID);
 
@@ -518,13 +518,16 @@ require([
         }
 
         // Set the dimensions of the canvas / graph
-        var margin = {top: 35, right: 0, bottom: 5, left: 60};
-        var width = container.width() - margin.left - margin.right - 5;
-        var height = container.height() - margin.top - margin.bottom - 5;
+        var margin = {top: 20, right: 5, bottom: 5, left: 35};
+        var width = container.width() - margin.left - margin.right;
+        var height = container.height() - margin.top - margin.bottom;
+
+        console.log(width, height);
 
         // Adds the svg canvas
         var svg = d3.select(containerID)
             .append("svg")
+                .attr('class', 'line-chart-svg')
                 .attr("width", width + margin.left + margin.right)
                 .attr("height", height + margin.top + margin.bottom)
             .append("g")
@@ -533,7 +536,7 @@ require([
 
         var xScale = d3.time.scale()
             .domain(getDomainFromData(data[1].values, "stdTime"))
-            .rangeRound([0, width - margin.left]);
+            .range([0, width - 10]);
 
         var yScale = d3.scale.linear()
             .domain(getDomainFromData(data[0].values.concat(data[1].values), "value"))
@@ -551,18 +554,18 @@ require([
         var yAxis = d3.svg.axis()
             .scale(yScale)
             .orient("left")
-            .ticks(8)
-            .tickPadding(15)
-            .innerTickSize(-(width - margin.left));
+            .ticks(7)
+            .tickPadding(10)
+            .innerTickSize(-(width - 10));
 
         // Add the X Axis
-        svg.append("g")
+        var xAxisG = svg.append("g")
             .attr("class", "x axis")
             .attr("transform", "translate(0," + (height - margin.top) + ")")
             .call(xAxis);
             
         // Add the Y Axis
-        svg.append("g")
+        var yAxisG = svg.append("g")
             .attr("class", "y axis")
             .call(yAxis);   
 
@@ -583,7 +586,7 @@ require([
 
         barWidth = (!barWidth) ? 0.5 : barWidth;
 
-        svg.selectAll("bar")
+        var bars = svg.selectAll("bar")
             .data(precipData[0].values)
             .enter().append("rect")
             .style("fill", getColorByKey("Precipitation"))
@@ -613,7 +616,7 @@ require([
             .attr('class', 'features');
             
         //append the line graphic
-        features.append('path')
+        var lines = features.append('path')
             .attr('class', 'line')
             .attr('d', function(d){
                 return createLine(d.values);
@@ -691,7 +694,7 @@ require([
         //     // .style("cursor", 'crosshair')
         //     // .call(drag);   
 
-        svg.append("rect")
+        var overlay = svg.append("rect")
             .attr("class", "overlay")
             .attr("width", width)
             .attr("height", height)
@@ -779,6 +782,32 @@ require([
             var startDate = new Date(time);
             var endDate = getEndTimeValue(startDate);
 
+            // var xPosByTime = xScale(time);
+
+            // highlightRefLine.attr("transform", function () {
+            //     return "translate(" + xPosByTime + ", 0)";
+            // });  
+
+            // highlightRefLine.style("display", null); 
+
+            // highlightRefLineLabel.attr("transform", function () {
+            //     return "translate(" + xPosByTime + ", -20)";
+            // });  
+
+            // highlightRefLineLabelText.text(timeFormatWithMonth(startDate));
+
+            updateMapTimeInfo(startDate, endDate);
+
+            highlightTrendLineByMonth(timeFormatFullMonthName(startDate));
+
+            setHighlightRefLineByTime(time);
+            
+            getPieChartDataByTime(time);
+
+            // console.log("update map and chart", startDate, endDate);
+        }
+
+        function setHighlightRefLineByTime(time){
             var xPosByTime = xScale(time);
 
             highlightRefLine.attr("transform", function () {
@@ -791,15 +820,7 @@ require([
                 return "translate(" + xPosByTime + ", -20)";
             });  
 
-            highlightRefLineLabelText.text(timeFormatWithMonth(startDate));
-
-            updateMapTimeInfo(startDate, endDate);
-
-            highlightTrendLineByMonth(timeFormatFullMonthName(startDate));
-            
-            getPieChartDataByTime(time);
-
-            // console.log("update map and chart", startDate, endDate);
+            highlightRefLineLabelText.text(timeFormatWithMonth(new Date(time)));
         }
 
         function getChartDataByTime(time, inputData){
@@ -857,7 +878,48 @@ require([
         }
 
         this.resize = function(){
-            console.log("margin", margin);
+            width = container.width() - margin.left - margin.right - 5;
+            height = container.height() - margin.top - margin.bottom - 5;
+
+            // Update the range of the scale with new width/height
+            xScale.range([0, width - margin.left]);
+            yScale.range([height - margin.top, 0]);
+
+            yAxis.innerTickSize(-(width - margin.left));
+
+            // // Update the tick marks
+            // xAxis.ticks(Math.max(width/75, 2));
+
+            // Update the axis and text with the new scale
+            xAxisG.attr("transform", "translate(0," + (height - margin.top) + ")").call(xAxis);
+            yAxisG.call(yAxis);
+
+            d3.select(".line-chart-svg").attr("width", width + margin.left + margin.right)
+                .attr("height", height + margin.top + margin.bottom);
+
+            lines.attr('d', function(d){
+                return createLine(d.values);
+            });
+
+            barWidth = Math.floor((width/precipData[0].values.length) * 0.8);
+
+            barWidth = (!barWidth) ? 0.5 : barWidth;
+
+            bars.attr("x", function(d) { 
+                    return xScale(d.stdTime) - barWidth/2; 
+                })
+                .attr("width", barWidth)
+                .attr("y", function(d) { 
+                    return yScale(d.value); 
+                })
+                .attr("height", function(d) { 
+                    return height - margin.top - yScale(d.value); 
+                });
+            
+            overlay.attr("width", width).attr("height", height);
+
+            setHighlightRefLineByTime(highlightTimeValue);
+
         }
 
         updateMapAndChartByTime(highlightTimeValue);
