@@ -518,7 +518,7 @@ require([
         }
 
         // Set the dimensions of the canvas / graph
-        var margin = {top: 20, right: 5, bottom: 5, left: 35};
+        var margin = {top: 20, right: 10, bottom: 5, left: 35};
         var width = container.width() - margin.left - margin.right;
         var height = container.height() - margin.top - margin.bottom;
 
@@ -536,7 +536,7 @@ require([
 
         var xScale = d3.time.scale()
             .domain(getDomainFromData(data[1].values, "stdTime"))
-            .range([0, width - 10]);
+            .range([0, width - margin.right]);
 
         var yScale = d3.scale.linear()
             .domain(getDomainFromData(data[0].values.concat(data[1].values), "value"))
@@ -556,7 +556,7 @@ require([
             .orient("left")
             .ticks(7)
             .tickPadding(10)
-            .innerTickSize(-(width - 10));
+            .innerTickSize(-(width - margin.right));
 
         // Add the X Axis
         var xAxisG = svg.append("g")
@@ -882,10 +882,10 @@ require([
             height = container.height() - margin.top - margin.bottom - 5;
 
             // Update the range of the scale with new width/height
-            xScale.range([0, width - margin.left]);
+            xScale.range([0, width - margin.right]);
             yScale.range([height - margin.top, 0]);
 
-            yAxis.innerTickSize(-(width - margin.left));
+            yAxis.innerTickSize(-(width - margin.right));
 
             // // Update the tick marks
             // xAxis.ticks(Math.max(width/75, 2));
