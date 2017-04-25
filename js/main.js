@@ -25,6 +25,8 @@ require([
     "esri/tasks/ImageServiceIdentifyTask",
     "esri/tasks/ImageServiceIdentifyParameters",
 
+    "esri/dijit/Search",
+
     "dojo/on",
     "dojo/dom-class",
     "dojo/_base/connect",
@@ -38,7 +40,7 @@ require([
     arcgisUtils, TimeExtent,
     MosaicRule, DimensionalDefinition,
     ImageServiceIdentifyTask, ImageServiceIdentifyParameters,
-
+    Search,
     on, domClass, connect, Deferred
 ){
     // Enforce strict mode
@@ -68,11 +70,28 @@ require([
 
         connect.disconnect(response.clickEventHandle);
 
-        app.map.on("click", getImageLayerDataByLocation);
+        app.map.on("click", function(event){
+            getImageLayerDataByLocation(event.mapPoint);
+        });
 
         setOperationalLayersVisibility();
 
         initializeMapTimeAndZExtent();
+
+        var search = new Search({
+            map: response.map,
+            autoNavigate: false,
+            enableInfoWindow: false,
+            enableHighlight: false,
+        }, "search");
+
+        search.on('search-results', function(response){
+            if(response.results["0"] && response.results["0"][0]){
+                getImageLayerDataByLocation(response.results["0"][0].feature.geometry);
+            }
+        });
+
+        search.startup();
     });
 
     $(".month-select").change(trendChartDropdownSelectOnChangeHandler);
@@ -101,9 +120,9 @@ require([
         }
     });
 
-    function getImageLayerDataByLocation(event){
+    function getImageLayerDataByLocation(inputGeom){
 
-        var identifyTaskInputGeometry = event.mapPoint;
+        var identifyTaskInputGeometry = inputGeom;
 
         var chartData = [];
 
@@ -275,11 +294,11 @@ require([
             SimpleMarkerSymbol.STYLE_CIRCLE, 
             12, 
             new SimpleLineSymbol(
-                SimpleLineSymbol.STYLE_NULL, 
-                new Color([247, 34, 101, 0.9]), 
-                1
+                SimpleLineSymbol.STYLE_SOLID, 
+                new Color([255, 255, 255, 0.7]), 
+                2
             ),
-            new Color([207, 34, 171, 0.5])
+            new Color([207, 34, 171, 0.8])
         );
 
         // Create a graphic and add the geometry and symbol to it
@@ -521,8 +540,6 @@ require([
         var margin = {top: 20, right: 10, bottom: 5, left: 35};
         var width = container.width() - margin.left - margin.right;
         var height = container.height() - margin.top - margin.bottom;
-
-        console.log(width, height);
 
         // Adds the svg canvas
         var svg = d3.select(containerID)

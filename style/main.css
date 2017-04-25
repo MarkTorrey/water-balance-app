@@ -72,6 +72,19 @@ html, body {
     /*color: #f8f8f8;*/
 }
 
+.navbar-fixed-top > div.search-input-wrapper {
+    display: flex;
+    order: 2;
+    flex-shrink: 0;
+    margin: 0;
+    width: 250px;
+}
+
+div.search-input-wrapper > div {
+    margin: 8px;
+    width: 100%;
+}
+
 .loading-indicator {
     /* Loading status */
     display    : none;
@@ -326,12 +339,13 @@ div.tooltip {
 }  
 
 select {
-    font-size: 16px;
+    font-size: 14px;
     height: 3rem;
     line-height: 3rem;
     /*height: 90%;*/
     width: 90%;
     margin: auto;
+    color: #505050;
 }
 
 div.pie-chart-tooltip {
