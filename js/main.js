@@ -70,32 +70,24 @@ require([
         //otherwise, show chart with precip and evapotranspiration
         app.isWaterStorageChartVisible = true;
 
-        console.log(app.webMapItems);
-
         connect.disconnect(response.clickEventHandle);
 
-        app.map.on("click", function(event){
-            getImageLayerDataByLocation(event.mapPoint);
+        //get the list of StdTime values from the image service's multidimensionalInfo
+        getStdTimeInfo().then(function(stdTimeInfo){
+
+            app.stdTimeInfo = stdTimeInfo;
+
+            app.map.on("click", function(event){
+                getImageLayerDataByLocation(event.mapPoint);
+            });
         });
-
-        var search = new Search({
-            map: response.map,
-            autoNavigate: false,
-            enableInfoWindow: false,
-            enableHighlight: false,
-        }, "search");
-
-        search.on('search-results', function(response){
-            if(response.results["0"] && response.results["0"][0]){
-                getImageLayerDataByLocation(response.results["0"][0].feature.geometry);
-            }
-        });
-
-        search.startup();
 
         setOperationalLayersVisibility();
 
         initializeMapTimeAndZExtent();
+
+        initSearchWidget();
+
     });
 
     $(".month-select").change(trendChartDropdownSelectOnChangeHandler);
@@ -125,19 +117,55 @@ require([
     });
 
     function getStdTimeInfo(url){
-        var layerUrl = "http://sampleserver1.arcgisonline.com/ArcGIS/rest/services/Demographics/ESRI_Census_USA/MapServer/layers";
+
+        domClass.add(document.body, "app-loading");
+
+        var deferred = new Deferred();
+
+        var layerUrl = app.webMapItems.operationalLayers[0].url;
+
         var layersRequest = esriRequest({
-            url: layerUrl,
+            url: layerUrl + "/multiDimensionalInfo",
             content: { f: "json" },
             handleAs: "json",
             callbackParamName: "callback"
         });
-        layersRequest.then(
-            function(response) {
-            console.log("Success: ", response.layers);
-        }, function(error) {
+
+        layersRequest.then(requestSuccessHandler, requestErrorHandler);
+
+        function requestSuccessHandler(response){
+
+            var stdTime = response.multidimensionalInfo.variables[0].dimensions.filter(function(d){
+                return d.name === "StdTime";
+            })[0];
+
+            domClass.remove(document.body, "app-loading");
+
+            deferred.resolve(stdTime.values);
+        }
+
+        function requestErrorHandler(error){
             console.log("Error: ", error.message);
+        }
+
+        return deferred.promise;
+    }
+
+    function initSearchWidget(){
+        var search = new Search({
+            map: app.map,
+            autoNavigate: false,
+            enableInfoWindow: false,
+            enableHighlight: false,
+        }, "search");
+
+        search.on('search-results', function(response){
+            if(response.results["0"] && response.results["0"][0]){
+                getImageLayerDataByLocation(response.results["0"][0].feature.geometry);
+            }
         });
+
+        search.startup();
     }
 
     function getImageLayerDataByLocation(inputGeom){
@@ -158,19 +186,19 @@ require([
 
             if(chartData.length === app.operationalLayersURL.length){
 
-                console.log(JSON.stringify(chartData));
+                // console.log(JSON.stringify(chartData));
 
-                // domClass.remove(document.body, "app-loading");
+                domClass.remove(document.body, "app-loading");
 
-                // chartData = chartData.filter(function(d){
-                //     return d.key !== "Runoff"
-                // });
+                chartData = chartData.filter(function(d){
+                    return d.key !== "Runoff"
+                });
             
-                // toggleBottomPane(true);
+                toggleBottomPane(true);
 
-                // createMonthlyTrendChart(chartData);
+                createMonthlyTrendChart(chartData);
 
-                // app.lineChart = new LineChart(chartData);
+                app.lineChart = new LineChart(chartData);
 
             }
         };
@@ -225,7 +253,63 @@ require([
             "values": []
         };
 
-        console.log(results);
+        var mergedResults = [];
+
+        var variableName;
+
+        results.catalogItems.features.forEach(function(d, i){
+
+            var values = results.properties.Values[i];
+
+            if(!variableName){
+                variableName = d.attributes.Variable;
+                mergedResults.push([values]);
+            } else {
+                if(variableName === d.attributes.Variable){
+                    mergedResults[mergedResults.length - 1].push(values);
+                } else {
+                    mergedResults.push([values]);
+                    variableName = d.attributes.Variable;
+                }
+            }
+
+        });
+
+        mergedResults = mergedResults.map(function(d){
+
+            var joinedValues = d.join(" ");
+
+            var joinedValuesInArray = joinedValues.split(" ");
+
+            return joinedValuesInArray;
+        });
+
+        // console.log(mergedResults);
+
+        if(mergedResults.length > 1){
+            mergedResults.forEach(function(d, i){
+                if(i === 0){
+                    processedResults.values = d.map(function(item, index){
+                        return {
+                            "stdTime": app.stdTimeInfo[index],
+                            "value": +item
+                        };
+                    });
+                } else {
+                    d.forEach(function(item, index){
+                        processedResults.values[index].value += +item;
+                    });
+                }
+            });
+
+        } else {
+            processedResults.values = mergedResults[0].map(function(item, index){
+                return {
+                    "stdTime": app.stdTimeInfo[index],
+                    "value": +item
+                };
+            });
+        }
 
         // if(imageServiceTitle === "Snowpack" || imageServiceTitle === "Evapotranspiration"){
             
@@ -342,8 +426,9 @@ require([
 
         var visibleLayer = getWebMapLayerByVisibility();
         var visibleLayerTimeInfo = getImageLayerTimeInfo(visibleLayer);
+        
         var startTime = convertUnixValueToTime(visibleLayerTimeInfo.timeExtent[0]);
-        var endTime = getEndTimeValue(startTime);
+        var endTime = getEndTimeValue(visibleLayerTimeInfo.timeExtent[0]);
 
         setZExtentForImageLayer(visibleLayer);
         updateMapTimeInfo(startTime, endTime);
@@ -353,7 +438,7 @@ require([
         //     console.log(startTime.getTime());
         // }
 
-        // console.log(visibleLayer);
+        console.log(visibleLayer);
         // console.log(visibleLayerTimeInfo.timeExtent[0], visibleLayerTimeInfo.timeExtent[1]);
     }
 
@@ -451,7 +536,7 @@ require([
         }
 
         timeInterval = timeInterval || 1;
-        formatedTimeUnit = formatedTimeUnit || "days";
+        formatedTimeUnit = formatedTimeUnit || "months";
 
         return new Date(moment(startTime).add(timeInterval, formatedTimeUnit).format());
     }
@@ -572,6 +657,14 @@ require([
             return domain;
         }
 
+        var precipData = data.filter(function(d){
+            return d.key === "Precipitation";
+        });
+
+        var evapoData = data.filter(function(d){
+            return d.key === "Evapotranspiration";
+        });
+
         // Set the dimensions of the canvas / graph
         var margin = {top: 20, right: 10, bottom: 5, left: 35};
         var width = container.width() - margin.left - margin.right;
@@ -588,11 +681,11 @@ require([
                 .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
         var xScale = d3.time.scale()
-            .domain(getDomainFromData(data[1].values, "stdTime"))
+            .domain(getDomainFromData(precipData[0].values, "stdTime"))
             .range([0, width - margin.right]);
 
         var yScale = d3.scale.linear()
-            .domain(getDomainFromData(data[0].values.concat(data[1].values), "value"))
+            .domain(getDomainFromData(precipData[0].values.concat(evapoData[0].values), "value"))
             .range([(height - margin.top), 0]);
 
         // Define the axes
@@ -631,10 +724,6 @@ require([
             });
             // .interpolate("monotone"); //interpolate the straight lines into curve lines
 
-        var precipData = data.filter(function(d){
-            return d.key === "Precipitation";
-        });
-
         var barWidth = Math.floor((width/precipData[0].values.length) * 0.8);
 
         barWidth = (!barWidth) ? 0.5 : barWidth;
@@ -655,10 +744,6 @@ require([
             .attr("height", function(d) { 
                 return height - margin.top - yScale(d.value); 
             });
-
-        var evapoData = data.filter(function(d){
-            return d.key === "Evapotranspiration";
-        });
 
         // console.log("evapoData", evapoData);
 
@@ -833,7 +918,7 @@ require([
 
         function updateMapAndChartByTime(time){
             var startDate = new Date(time);
-            var endDate = getEndTimeValue(startDate);
+            var endDate = getEndTimeValue(time);
 
             // var xPosByTime = xScale(time);
 
