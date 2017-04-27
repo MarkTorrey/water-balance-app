@@ -85,6 +85,10 @@ div.search-input-wrapper > div {
     width: 100%;
 }
 
+.calcite .arcgisSearch {
+    box-shadow: unset !important;
+}
+
 .loading-indicator {
     /* Loading status */
     display    : none;
