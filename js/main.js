@@ -104,13 +104,13 @@ require([
         if(targetLayer === "precipitation"){
             app.isWaterStorageChartVisible = false;
 
-            $('.data-layer-select option').removeAttr('disabled');
+            // $('.data-layer-select option').removeAttr('disabled');
             $(".data-layer-select option").removeAttr("selected");
 
             $(".data-layer-select ").val("Precipitation");
 
             $('.data-layer-select option[value="Precipitation"]').attr('selected','selected');
-            $('.data-layer-select option[category="waterstorage"]').attr('disabled','disabled');
+            // $('.data-layer-select option[category="waterstorage"]').attr('disabled','disabled');
 
         } else {
             app.isWaterStorageChartVisible = true;
@@ -119,13 +119,13 @@ require([
 
             // $(".data-layer-select option:selected").removeAttr("selected");
 
-            $('.data-layer-select option').removeAttr('disabled');
+            // $('.data-layer-select option').removeAttr('disabled');
             $(".data-layer-select option").removeAttr("selected");
 
             $(".data-layer-select ").val("Soil Moisture");
 
             $('.data-layer-select option[value="Soil Moisture"]').attr('selected','selected');
-            $('.data-layer-select option[category="waterflux"]').attr('disabled','disabled');
+            // $('.data-layer-select option[category="waterflux"]').attr('disabled','disabled');
         }
 
         if(app.mainChart){
