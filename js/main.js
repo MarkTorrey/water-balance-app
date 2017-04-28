@@ -107,12 +107,16 @@ require([
             app.isWaterStorageChartVisible = true;
         }
 
+        if(app.mainChart){
+            app.mainChart.toggleChartViews();
+        }
+
         setOperationalLayersVisibility();
     });
 
     $(window).resize(function() {
-        if(app.lineChart){
-            app.lineChart.resize();
+        if(app.mainChart){
+            app.mainChart.resize();
         }
     });
 
@@ -186,19 +190,19 @@ require([
 
             if(chartData.length === app.operationalLayersURL.length){
 
-                // console.log(JSON.stringify(chartData));
+                // console.log(chartData);
 
                 domClass.remove(document.body, "app-loading");
 
                 chartData = chartData.filter(function(d){
-                    return d.key !== "Runoff"
+                    return d.key !== "Runoff";
                 });
             
                 toggleBottomPane(true);
 
                 createMonthlyTrendChart(chartData);
 
-                app.lineChart = new LineChart(chartData);
+                app.mainChart = new MainChart(chartData);
 
             }
         };
@@ -284,7 +288,6 @@ require([
             return joinedValuesInArray;
         });
 
-        // console.log(mergedResults);
 
         if(mergedResults.length > 1){
             mergedResults.forEach(function(d, i){
@@ -311,34 +314,7 @@ require([
             });
         }
 
-        // if(imageServiceTitle === "Snowpack" || imageServiceTitle === "Evapotranspiration"){
-            
-        //     for(var i = 0, len = results.properties.Values.length; i < len; i++){
-
-        //         var time = results.catalogItems.features[i].attributes.StdTime;
-        //         var value = results.properties.Values[i];
-
-        //         processedResults.values.push({stdTime: time, value: +value});
-        //     }
-        // } 
-        // else if (imageServiceTitle === "Precipitation" || imageServiceTitle === "Runoff"){
-        //     // sum rain and snow to get total precipitation of the month
-        //     for(var i = 0, len = results.properties.Values.length; i < len; i++){
-
-        //         if(!(i % 2)){
-        //             var time = results.catalogItems.features[i].attributes.StdTime;
-        //             var value = +results.properties.Values[i] + +results.properties.Values[i + 1];
-
-        //             processedResults.values.push({stdTime: time, value: +value});
-        //         }
-        //     }
-        // }
-        // else if (imageServiceTitle === "Soil Moisture"){
-            
-        // }   
-
         return processedResults;    
-        
     }
 
     // function getIdentifyTaskURLs(){
@@ -433,13 +409,7 @@ require([
         setZExtentForImageLayer(visibleLayer);
         updateMapTimeInfo(startTime, endTime);
 
-        // while(startTime < convertUnixValueToTime(visibleLayerTimeInfo.timeExtent[1])){
-        //     startTime = getEndTimeValue(startTime, 1, "esriTimeUnitsMonths");
-        //     console.log(startTime.getTime());
-        // }
-
-        console.log(visibleLayer);
-        // console.log(visibleLayerTimeInfo.timeExtent[0], visibleLayerTimeInfo.timeExtent[1]);
+        // console.log(visibleLayer);
     }
 
     function setOperationalLayersVisibility(){
@@ -475,10 +445,6 @@ require([
         }));
 
         layer.layerObject.setMosaicRule(mr);
-    }
-
-    function getWebMapLayerByName(){
-
     }
 
     function getWebMapLayerByVisibility(){
@@ -595,7 +561,7 @@ require([
         );    
     }
 
-    function LineChart(data){
+    function MainChart(data){
 
         var containerID = ".line-chart-div";
 
@@ -665,6 +631,14 @@ require([
             return d.key === "Evapotranspiration";
         });
 
+        var snowpackData = data.filter(function(d){
+            return d.key === "Snowpack";
+        });
+
+        var soilMoistureData = data.filter(function(d){
+            return d.key === "Soil Moisture";
+        });
+
         // Set the dimensions of the canvas / graph
         var margin = {top: 20, right: 10, bottom: 5, left: 35};
         var width = container.width() - margin.left - margin.right;
@@ -684,8 +658,12 @@ require([
             .domain(getDomainFromData(precipData[0].values, "stdTime"))
             .range([0, width - margin.right]);
 
+        // var yScale = d3.scale.linear()
+        //     .domain(getDomainFromData(precipData[0].values.concat(evapoData[0].values), "value"))
+        //     .range([(height - margin.top), 0]);
+
         var yScale = d3.scale.linear()
-            .domain(getDomainFromData(precipData[0].values.concat(evapoData[0].values), "value"))
+            .domain(getDomainFromData(soilMoistureData[0].values.concat(snowpackData[0].values), "value"))
             .range([(height - margin.top), 0]);
 
         // Define the axes
@@ -765,6 +743,48 @@ require([
             .attr('stroke-width', 2)
             .attr('fill', 'none');  
 
+        
+        snowpackData = snowpackData[0].values.map(function(d){
+            d.key = "Snowpack";
+            return d;
+        })
+
+        soilMoistureData = soilMoistureData[0].values.map(function(d){
+            d.key = "Soil Moisture";
+            return d;
+        });
+
+        var areaChartData = soilMoistureData.concat(snowpackData);
+
+        var stack = d3.layout.stack()
+            .offset("zero")
+            .values(function(d) { return d.values; })
+            .x(function(d) { return d.stdTime; })
+            .y(function(d) { return d.value; });
+
+        var nest = d3.nest()
+            .key(function(d) { return d.key; });
+
+        var areaChartLayers = stack(nest.entries(areaChartData));
+
+        var createArea = d3.svg.area()
+            // .interpolate("cardinal")
+            .x(function(d) { return xScale(d.stdTime); })
+            .y0(function(d) { return yScale(d.y0); })
+            .y1(function(d) { return yScale(d.y0 + d.y); });
+
+        // xScale.domain(d3.extent(data, function(d) { return d.date; }));
+        // yScale.domain([0, d3.max(areaChartData, function(d) { return d.y0 + d.y; })]);
+
+        // console.log(areaChartLayers);
+
+        var areas = svg.selectAll(".layer")
+            .data(areaChartLayers)
+            .enter().append("path")
+            .attr("class", "layer")
+            .attr("d", function(d) { return createArea(d.values); })
+            .style("fill", function(d, i) { return getColorByKey(d.key); });
+
         // Define 'div' for tooltips
         var tooltipDiv = d3.select("body")
             .append("div")
@@ -820,17 +840,6 @@ require([
             // .text("Jan 2010")
             .style('fill', '#fff')
             .style("cursor", 'crosshair');
-
-        // var highlightRefLineLabelRect = svg.append('rect')
-        //     .attr('x', 0)
-        //     .attr('y', -20)
-        //     .attr('width', 70)
-        //     .attr('height', 20)
-        //     .attr('class', 'highlightRefLineLabelRect')
-        //     .style('opacity', 0.7)
-        //     .style('fill', 'red');
-        //     // .style("cursor", 'crosshair')
-        //     // .call(drag);   
 
         var overlay = svg.append("rect")
             .attr("class", "overlay")
@@ -920,20 +929,6 @@ require([
             var startDate = new Date(time);
             var endDate = getEndTimeValue(time);
 
-            // var xPosByTime = xScale(time);
-
-            // highlightRefLine.attr("transform", function () {
-            //     return "translate(" + xPosByTime + ", 0)";
-            // });  
-
-            // highlightRefLine.style("display", null); 
-
-            // highlightRefLineLabel.attr("transform", function () {
-            //     return "translate(" + xPosByTime + ", -20)";
-            // });  
-
-            // highlightRefLineLabelText.text(timeFormatWithMonth(startDate));
-
             updateMapTimeInfo(startDate, endDate);
 
             highlightTrendLineByMonth(timeFormatFullMonthName(startDate));
@@ -941,8 +936,6 @@ require([
             setHighlightRefLineByTime(time);
             
             getPieChartDataByTime(time);
-
-            // console.log("update map and chart", startDate, endDate);
         }
 
         function setHighlightRefLineByTime(time){
@@ -1014,6 +1007,41 @@ require([
                 updatePieChart(pieChartData);
             }
         }
+        
+        this.toggleChartViews = function(){
+
+            if(app.isWaterStorageChartVisible){
+                yScale.domain([0, d3.max(areaChartData, function(d) { return d.y0 + d.y; })]);
+                areas.style("opacity", ".8");
+                lines.style("opacity", "0");
+                bars.style("opacity", "0");
+            } else {
+                yScale.domain(getDomainFromData(precipData[0].values.concat(evapoData[0].values), "value"));
+                areas.style("opacity", "0");
+                lines.style("opacity", ".8");
+                bars.style("opacity", ".8");
+            }
+
+            yAxisG.transition().duration(1000).ease("sin-in-out")
+                .call(yAxis);  
+
+            lines.transition().duration(1000).attr('d', function(d){
+                return createLine(d.values);
+            });
+
+            areas.transition().duration(1000).attr("d", function(d) { 
+                return createArea(d.values); 
+            });
+
+            bars.transition().duration(1000)
+            .attr("y", function(d) { 
+                return yScale(d.value); 
+            })
+            .attr("height", function(d) { 
+                return height - margin.top - yScale(d.value); 
+            });
+            
+        }
 
         this.resize = function(){
             width = container.width() - margin.left - margin.right - 5;
@@ -1039,6 +1067,10 @@ require([
                 return createLine(d.values);
             });
 
+            areas.attr("d", function(d) { 
+                return createArea(d.values); 
+            });
+
             barWidth = Math.floor((width/precipData[0].values.length) * 0.8);
 
             barWidth = (!barWidth) ? 0.5 : barWidth;
@@ -1061,6 +1093,8 @@ require([
         }
 
         updateMapAndChartByTime(highlightTimeValue);
+
+        this.toggleChartViews();
 
     }
 
@@ -1267,6 +1301,14 @@ require([
             };
         });
 
+        var precipData = data.filter(function(d){
+            return d.key === "Precipitation";
+        });
+
+        var evapoData = data.filter(function(d){
+            return d.key === "Evapotranspiration";
+        });
+
         // console.log(chartData);
 
         var uniqueYearValues = chartData[0].values[0].values.map(function(d) {
@@ -1300,7 +1342,7 @@ require([
         var yScale = d3.scale.linear()
             .range([height - margin.top, 0])
             .domain(
-                [0, d3.max(data[0].values.concat(data[1].values), function(d) {return d.value;})]
+                [0, d3.max(precipData[0].values.concat(evapoData[0].values), function(d) {return d.value;})]
             );  
 
         var xAxis = d3.svg.axis()
@@ -1412,6 +1454,12 @@ require([
                 break;
             case "Added to Storage":
                 color = "#468C98"
+                break;
+            case "Snowpack":
+                color = "#909090"
+                break;
+            case "Soil Moisture":
+                color = "steelblue"
                 break;
         }
         return color;
