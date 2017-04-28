@@ -103,12 +103,40 @@ require([
 
         if(targetLayer === "precipitation"){
             app.isWaterStorageChartVisible = false;
+
+            $('.data-layer-select option').removeAttr('disabled');
+            $(".data-layer-select option").removeAttr("selected");
+
+            $(".data-layer-select ").val("Precipitation");
+
+            $('.data-layer-select option[value="Precipitation"]').attr('selected','selected');
+            $('.data-layer-select option[category="waterstorage"]').attr('disabled','disabled');
+
         } else {
             app.isWaterStorageChartVisible = true;
+
+            // $('.data-layer-select option[value="Soil Moisture"]').attr('selected','selected');
+
+            // $(".data-layer-select option:selected").removeAttr("selected");
+
+            $('.data-layer-select option').removeAttr('disabled');
+            $(".data-layer-select option").removeAttr("selected");
+
+            $(".data-layer-select ").val("Soil Moisture");
+
+            $('.data-layer-select option[value="Soil Moisture"]').attr('selected','selected');
+            $('.data-layer-select option[category="waterflux"]').attr('disabled','disabled');
         }
 
         if(app.mainChart){
             app.mainChart.toggleChartViews();
+        }
+
+        if(app.monthlyTrendChart){
+            highlightTrendLineByMonth(app.selectedMonth);
+            app.monthlyTrendChart.updateChartScale();
+
+            
         }
 
         setOperationalLayersVisibility();
@@ -200,7 +228,7 @@ require([
             
                 toggleBottomPane(true);
 
-                createMonthlyTrendChart(chartData);
+                app.monthlyTrendChart = new MonthlyTrendChart(chartData);
 
                 app.mainChart = new MainChart(chartData);
 
@@ -540,6 +568,8 @@ require([
         var selectedMonth = $(".month-select").val();
 
         highlightTrendLineByMonth(selectedMonth);
+
+        app.monthlyTrendChart.updateChartScale();
     }
 
     function signInToArcGISPortal(){
@@ -941,9 +971,11 @@ require([
             var startDate = new Date(time);
             var endDate = getEndTimeValue(time);
 
+            app.selectedMonth = timeFormatFullMonthName(startDate);
+
             updateMapTimeInfo(startDate, endDate);
 
-            highlightTrendLineByMonth(timeFormatFullMonthName(startDate));
+            highlightTrendLineByMonth(app.selectedMonth);
 
             setHighlightRefLineByTime(time);
             
@@ -1261,7 +1293,7 @@ require([
         this.update(dataset);
     }
 
-    function createMonthlyTrendChart(data){
+    function MonthlyTrendChart(data){
 
         var getMonthFromTime = d3.time.format("%B");
         var getYearFromTime = d3.time.format("%y");
@@ -1321,7 +1353,13 @@ require([
             return d.key === "Evapotranspiration";
         });
 
-        // console.log(chartData);
+        var soilMoistureData = data.filter(function(d){
+            return d.key === "Soil Moisture";
+        });
+
+        var snowpackData = data.filter(function(d){
+            return d.key === "Snowpack";
+        });
 
         var uniqueYearValues = chartData[0].values[0].values.map(function(d) {
             return d.year;
@@ -1354,7 +1392,7 @@ require([
         var yScale = d3.scale.linear()
             .range([height - margin.top, 0])
             .domain(
-                [0, d3.max(precipData[0].values.concat(evapoData[0].values), function(d) {return d.value;})]
+                [0, d3.max(soilMoistureData[0].values.concat(snowpackData[0].values), function(d) {return d.value;})]
             );  
 
         var xAxis = d3.svg.axis()
@@ -1371,12 +1409,12 @@ require([
             .tickPadding(5)
             .orient("left");
         
-        svg.append("svg:g")
+        var xAxisG = svg.append("svg:g")
             .attr("class", "x axis")
             .attr("transform", "translate(0," + (height - margin.top) + ")")
             .call(xAxis);
             
-        svg.append("svg:g")
+        var yAxisG = svg.append("svg:g")
             .attr("class", "y axis")
             .attr("transform", "translate(" + (margin.left) + ",0)")
             .call(yAxis);
@@ -1392,22 +1430,33 @@ require([
             })
             .interpolate("monotone");
 
-        var precipData = chartData.filter(function(d){
+        var precipDataNested = chartData.filter(function(d){
             return d.key === "Precipitation";
         });
 
-        var evapoData = chartData.filter(function(d){
+        var evapoDataNested = chartData.filter(function(d){
             return d.key === "Evapotranspiration";
         });
 
+        var soilMoistureDataNested = chartData.filter(function(d){
+            return d.key === "Soil Moisture";
+        });
+
+        var snowpackDataNested = chartData.filter(function(d){
+            return d.key === "Snowpack";
+        });
+
+        var waterStorageData = snowpackDataNested[0].values.concat(soilMoistureDataNested[0].values);
+        var waterFluxData = precipDataNested[0].values.concat(evapoDataNested[0].values);
+
         //create container for each data group
         var features = svg.selectAll('features')
-			.data(precipData[0].values.concat(evapoData[0].values))
+			.data(waterStorageData.concat(waterFluxData))
             .enter().append('g')
             .attr('class', 'features');
             
         //append the line graphic
-        features.append('path')
+        var lines = features.append('path')
             .attr('class', 'monthly-trend-line')
             .attr('d', function(d){
                 return createLine(d.values);
@@ -1420,6 +1469,30 @@ require([
             .attr('fill', 'none');  
 
         // highlightTrendLineByMonth("January");
+
+        this.updateChartScale = function(){
+            
+            var dataLayerType = $(".data-layer-select").val();
+
+            if(dataLayerType === "Precipitation" || dataLayerType === "Evapotranspiration" ){
+                yScale.domain(
+                    [0, d3.max(precipData[0].values.concat(evapoData[0].values), function(d) {return d.value;})]
+                );
+            } 
+            else if(dataLayerType === "Snowpack" || dataLayerType === "Soil Moisture") {
+                yScale.domain(
+                    [0, d3.max(soilMoistureData[0].values.concat(snowpackData[0].values), function(d) {return d.value;})]
+                );
+            }
+
+            // console.log(yScale.domain);
+
+            yAxisG.transition().duration(1000).ease("sin-in-out").call(yAxis);  
+
+            lines.transition().duration(1000).attr('d', function(d){
+                return createLine(d.values);
+            })
+        }
     }
 
     function highlightTrendLineByMonth(month){
