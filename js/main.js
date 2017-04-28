@@ -908,8 +908,20 @@ require([
                 return "translate(" + xScale(closestTimeValue) + ", 0)";
             });  
 
+            tooltipData = tooltipData.filter(function(d){
+                if(app.isWaterStorageChartVisible){
+                    return d.key === "Soil Moisture" || d.key === "Snowpack";
+                } else {
+                    return d.key === "Precipitation" || d.key === "Evapotranspiration";
+                }
+            });
+
+            tooltipData.sort(function(a, b){
+                return b.value - a.value;
+            })
+
             tooltipData.forEach(function(d){
-                tooltipContent += '<span style="color:' + getColorByKey(d.key) + '">' +  d.key + ': ' +  d.value+ '</span><br>';
+                tooltipContent += '<span style="color:' + getColorByKey(d.key) + '">' +  d.key + ': ' +  parseInt(d.value) + '</span><br>';
             });    
             
             tooltipDiv.html(tooltipContent)
@@ -972,14 +984,6 @@ require([
                     value: selectedItem[0].value
                 });
             }
-
-            chartData.filter(function(d){
-                if(app.isWaterStorageChartVisible){
-
-                } else {
-
-                }
-            });
 
             return chartData;
         }
