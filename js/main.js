@@ -55,7 +55,7 @@ require([
 
     var app = {};
 
-    signInToArcGISPortal();
+    // signInToArcGISPortal();
 
     arcgisUtils.createMap(appConfig.webMapID,"mapDiv").then(function(response){
 
@@ -972,6 +972,14 @@ require([
                     value: selectedItem[0].value
                 });
             }
+
+            chartData.filter(function(d){
+                if(app.isWaterStorageChartVisible){
+
+                } else {
+
+                }
+            });
 
             return chartData;
         }
