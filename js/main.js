@@ -625,7 +625,7 @@ require([
 
         var currentTimeValueByMousePosition;
 
-        var highlightTimeValue = uniqueTimeValues[0];
+        var highlightTimeValue = uniqueTimeValues[uniqueTimeValues.length-1];
 
         var getDomainFromData = function(values, key){
 
@@ -686,7 +686,7 @@ require([
 
         var xScale = d3.time.scale()
             .domain(getDomainFromData(precipData[0].values, "stdTime"))
-            .range([0, width - margin.right]);
+            .range([0, width - margin.right - 10]);
 
         // var yScale = d3.scale.linear()
         //     .domain(getDomainFromData(precipData[0].values.concat(evapoData[0].values), "value"))
@@ -710,7 +710,7 @@ require([
             .orient("left")
             .ticks(7)
             .tickPadding(10)
-            .innerTickSize(-(width - margin.right));
+            .innerTickSize(-(width - margin.right - 10));
 
         // Add the X Axis
         var xAxisG = svg.append("g")
