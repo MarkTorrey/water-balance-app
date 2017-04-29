@@ -112,6 +112,8 @@ require([
             $('.data-layer-select option[value="Precipitation"]').attr('selected','selected');
             // $('.data-layer-select option[category="waterstorage"]').attr('disabled','disabled');
 
+            
+
         } else {
             app.isWaterStorageChartVisible = true;
 
@@ -127,6 +129,8 @@ require([
             $('.data-layer-select option[value="Soil Moisture"]').attr('selected','selected');
             // $('.data-layer-select option[category="waterflux"]').attr('disabled','disabled');
         }
+
+        $('.legend-wrapper').toggleClass("hide");
 
         if(app.mainChart){
             app.mainChart.toggleChartViews();
@@ -621,6 +625,8 @@ require([
             return self.indexOf(item) == pos;
         });
 
+        var xAxisWidthOffset = 10;
+
         var prevMouseXPosition = 0;
 
         var currentTimeValueByMousePosition;
@@ -686,7 +692,7 @@ require([
 
         var xScale = d3.time.scale()
             .domain(getDomainFromData(precipData[0].values, "stdTime"))
-            .range([0, width - margin.right - 10]);
+            .range([0, width - margin.right - xAxisWidthOffset]);
 
         // var yScale = d3.scale.linear()
         //     .domain(getDomainFromData(precipData[0].values.concat(evapoData[0].values), "value"))
@@ -700,7 +706,7 @@ require([
         var xAxis = d3.svg.axis()
             .scale(xScale)
             .orient("bottom")
-            .ticks(uniqueYearValues.length)
+            // .ticks(uniqueYearValues.length)
             .tickPadding(5)
             .innerTickSize(-(height - margin.top))
             .tickFormat(timeFormat);
@@ -710,7 +716,7 @@ require([
             .orient("left")
             .ticks(7)
             .tickPadding(10)
-            .innerTickSize(-(width - margin.right - 10));
+            .innerTickSize(-(width - margin.right - xAxisWidthOffset));
 
         // Add the X Axis
         var xAxisG = svg.append("g")
@@ -1092,10 +1098,10 @@ require([
             height = container.height() - margin.top - margin.bottom - 5;
 
             // Update the range of the scale with new width/height
-            xScale.range([0, width - margin.right]);
+            xScale.range([0, width - margin.right - xAxisWidthOffset]);
             yScale.range([height - margin.top, 0]);
 
-            yAxis.innerTickSize(-(width - margin.right));
+            yAxis.innerTickSize(-(width - margin.right - xAxisWidthOffset));
 
             // // Update the tick marks
             // xAxis.ticks(Math.max(width/75, 2));
@@ -1541,10 +1547,10 @@ require([
                 color = "#468C98"
                 break;
             case "Snowpack":
-                color = "#909090"
+                color = "#bcbcbc"
                 break;
             case "Soil Moisture":
-                color = "steelblue"
+                color = "#028090"
                 break;
         }
         return color;
