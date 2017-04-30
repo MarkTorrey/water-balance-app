@@ -137,10 +137,8 @@ require([
         }
 
         if(app.monthlyTrendChart){
-            highlightTrendLineByMonth(app.selectedMonth);
+            app.monthlyTrendChart.highlightTrendLineByMonth(app.selectedMonth);
             app.monthlyTrendChart.updateChartScale();
-
-            
         }
 
         setOperationalLayersVisibility();
@@ -570,7 +568,7 @@ require([
 
         var selectedMonth = $(".month-select").val();
 
-        highlightTrendLineByMonth(selectedMonth);
+        app.monthlyTrendChart.highlightTrendLineByMonth(selectedMonth);
 
         app.monthlyTrendChart.updateChartScale();
     }
@@ -959,7 +957,7 @@ require([
                 .style("left", Math.max(0, tooltipX) + "px")
                 .style("top", (d3.event.pageY - 50) + "px");   
 
-            highlightTrendLineByMonth(timeFormatFullMonthName(new Date(closestTimeValue)));
+            app.monthlyTrendChart.highlightTrendLineByMonth(timeFormatFullMonthName(new Date(closestTimeValue)));
             
             getPieChartDataByTime(closestTimeValue);
 
@@ -976,7 +974,7 @@ require([
 
             updateMapTimeInfo(startDate, endDate);
 
-            highlightTrendLineByMonth(app.selectedMonth);
+            app.monthlyTrendChart.highlightTrendLineByMonth(app.selectedMonth);
 
             setHighlightRefLineByTime(time);
             
@@ -1464,8 +1462,6 @@ require([
         var waterStorageData = snowpackDataNested[0].values.concat(soilMoistureDataNested[0].values);
         var waterFluxData = precipDataNested[0].values.concat(evapoDataNested[0].values);
 
-        console.log(evapoDataNested);
-
         //create container for each data group
         var features = svg.selectAll('features')
 			.data(waterStorageData.concat(waterFluxData))
@@ -1485,24 +1481,46 @@ require([
             .attr('stroke-width', 1)
             .attr('fill', 'none');  
 
-        // highlightTrendLineByMonth("January");
-
         this.updateChartScale = function(){
             
             var dataLayerType = $(".data-layer-select").val();
+            var monthSelectValue = $(".month-select").val();
 
-            if(dataLayerType === "Precipitation" || dataLayerType === "Evapotranspiration" ){
-                yScale.domain(
-                    [0, d3.max(precipData[0].values.concat(evapoData[0].values), function(d) {return d.value;})]
-                );
-            } 
-            else if(dataLayerType === "Snowpack" || dataLayerType === "Soil Moisture") {
-                yScale.domain(
-                    [0, d3.max(soilMoistureData[0].values.concat(snowpackData[0].values), function(d) {return d.value;})]
-                );
+            function getYScaleDomainForAnnualTotal(){
+                var chartDataByLayerType = chartData.filter(function(d){
+                    return d.key === dataLayerType;
+                })[0];
+
+                var annualTotalData = chartDataByLayerType.values.filter(function(d){
+                    return d.key === "Annual";
+                })[0];
+
+                var annualTotalDataMax = d3.max(annualTotalData.values, function(d) {return d.value;});
+
+                return [0, annualTotalDataMax];
             }
 
-            // console.log(yScale.domain);
+            if(dataLayerType === "Precipitation" || dataLayerType === "Evapotranspiration" ){
+
+                if(monthSelectValue !== "Annual"){
+                    yScale.domain(
+                        [0, d3.max(precipData[0].values.concat(evapoData[0].values), function(d) {return d.value;})]
+                    );
+                } else {
+                    yScale.domain(getYScaleDomainForAnnualTotal());
+                }
+
+            } 
+            else if(dataLayerType === "Snowpack" || dataLayerType === "Soil Moisture") {
+
+                if(monthSelectValue !== "Annual"){
+                    yScale.domain(
+                        [0, d3.max(soilMoistureData[0].values.concat(snowpackData[0].values), function(d) {return d.value;})]
+                    );
+                } else {
+                    yScale.domain(getYScaleDomainForAnnualTotal());
+                }
+            }
 
             yAxisG.transition().duration(1000).ease("sin-in-out").call(yAxis);  
 
@@ -1510,34 +1528,58 @@ require([
                 return createLine(d.values);
             })
         }
+
+        this.highlightTrendLineByMonth = function(month){
+            var dataLayerType = $(".data-layer-select").val();
+
+            lines.style("opacity", 0);
+            lines.style("stroke-width", 1);
+
+            lines.each(function(d){
+                var lineElement = d3.select(this).node();
+
+                if(d.key !== month && d.dataType === dataLayerType){
+                    d3.select(lineElement).style("opacity", 0.2);
+                    d3.select(lineElement).style("stroke-width", 1);
+                }  
+                else if(d.key === month && d.dataType === dataLayerType){
+                    // console.log("highlight", lineElement);
+                    d3.select(lineElement).style("opacity", 1);
+                    d3.select(lineElement).style("stroke-width", 3);
+                } 
+
+            });
+
+            $(".month-select").val(month);
+        }
     }
 
-    function highlightTrendLineByMonth(month){
+    // function highlightTrendLineByMonth(month){
 
-        // $(".monthly-trend-chart-title-div").html("Trend Analyzer");
+    //     // $(".monthly-trend-chart-title-div").html("Trend Analyzer");
 
-        var dataLayerType = $(".data-layer-select").val();
+    //     var dataLayerType = $(".data-layer-select").val();
 
-        d3.selectAll(".monthly-trend-line").style("opacity", 0);
-        d3.selectAll(".monthly-trend-line").style("stroke-width", 1);
+    //     d3.selectAll(".monthly-trend-line").style("opacity", 0);
+    //     d3.selectAll(".monthly-trend-line").style("stroke-width", 1);
 
-        d3.selectAll(".monthly-trend-line").each(function(d){
-            var lineElement = d3.select(this).node();
+    //     d3.selectAll(".monthly-trend-line").each(function(d){
+    //         var lineElement = d3.select(this).node();
 
-            if(d.key !== month && d.dataType === dataLayerType){
-                d3.select(lineElement).style("opacity", 0.2);
-                d3.select(lineElement).style("stroke-width", 1);
-            }  
-            else if(d.key === month && d.dataType === dataLayerType){
-                // console.log("highlight", lineElement);
-                d3.select(lineElement).style("opacity", 1);
-                d3.select(lineElement).style("stroke-width", 3);
-            } 
+    //         if(d.key !== month && d.dataType === dataLayerType){
+    //             d3.select(lineElement).style("opacity", 0.2);
+    //             d3.select(lineElement).style("stroke-width", 1);
+    //         }  
+    //         else if(d.key === month && d.dataType === dataLayerType){
+    //             // console.log("highlight", lineElement);
+    //             d3.select(lineElement).style("opacity", 1);
+    //             d3.select(lineElement).style("stroke-width", 3);
+    //         } 
 
-        });
+    //     });
 
-        $(".month-select").val(month);
-    }
+    //     $(".month-select").val(month);
+    // }
 
 
     function getColorByKey(key){
