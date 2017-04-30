@@ -274,7 +274,6 @@ require([
         imageServiceIdentifyTaskParams.mosaicRule = getMosaicRule(imageServiceTitle);
 
         imageServiceIdentifyTask.execute(imageServiceIdentifyTaskParams).then(function(response) {
-            // console.log(response);
             var processedResults = processIdentifyTaskResults(response, imageServiceTitle);
             deferred.resolve(processedResults);
         });
@@ -736,7 +735,7 @@ require([
             .y(function(d) {
                 return yScale(d.value);
             });
-            // .interpolate("monotone"); //interpolate the straight lines into curve lines
+            // .interpolate("step-after"); //interpolate the straight lines into curve lines
 
         var barWidth = Math.floor((width/precipData[0].values.length) * 0.8);
 
@@ -808,11 +807,6 @@ require([
             .x(function(d) { return xScale(d.stdTime); })
             .y0(function(d) { return yScale(d.y0); })
             .y1(function(d) { return yScale(d.y0 + d.y); });
-
-        // xScale.domain(d3.extent(data, function(d) { return d.date; }));
-        // yScale.domain([0, d3.max(areaChartData, function(d) { return d.y0 + d.y; })]);
-
-        // console.log(areaChartLayers);
 
         var areas = svg.selectAll(".layer")
             .data(areaChartLayers)
@@ -957,7 +951,8 @@ require([
             })
 
             tooltipData.forEach(function(d){
-                tooltipContent += '<span style="color:' + getColorByKey(d.key) + '">' +  d.key + ': ' +  parseInt(d.value) + '</span><br>';
+                var textColor = (d.key === "Snowpack") ? "#909090": getColorByKey(d.key);
+                tooltipContent += '<span style="color:' + textColor + '">' +  d.key + ': ' +  parseInt(d.value) + '</span><br>';
             });    
             
             tooltipDiv.html(tooltipContent)
@@ -1316,34 +1311,48 @@ require([
                 .key(function(d){ return d.month; })
                 .entries(d.values);
 
-            // var annualValues = [];
+            var annualValues = [];
 
             entries.forEach(function(i){
                 i.dataType = d.key;
 
-                // i.values.forEach(function(item, index){
-                //     if(typeof annualValues[index] === 'undefined'){
-                //         annualValues[index] = [];
-                //     }
-                //     annualValues[index].push(item.value);
-                // });
+                i.values.forEach(function(item, index){
+                    if(typeof annualValues[index] === 'undefined'){
+                        annualValues[index] = [];
+                    }
+                    annualValues[index].push(item.value);
+                });
             });
 
-            // var foobar = {
-            //     "dataType": d.key,
-            //     "key": "Annual",
-            //     "values": [
-            //         {
-            //             "month": "Annual",
-            //             "value": 123,
-            //             "year": "10"
-            //         }
-            //     ]
-            // }
+            var annualTotalEntry = {
+                "dataType": d.key,
+                "key": "Annual",
+                "values": []
+            }
+
+            var annualValuesSum = annualValues.map(function(k){
+                var sum = 0;
+                k.forEach(function(v){
+                    sum += v;
+                });
+                return sum; 
+            });
+
+            annualValuesSum.forEach(function(item, index){
+                var year = entries[0].values[index].year;
+                var annualValObj =  {
+                    "month": "Annual",
+                    "value": item,
+                    "year": year
+                }
+                annualTotalEntry.values.push(annualValObj)
+            });
 
             // console.log(entries);
 
-            // console.log(annualValues);
+            // console.log(annualTotalEntry);
+
+            entries.push(annualTotalEntry)
 
             return {
                 "key": d.key, 
@@ -1454,6 +1463,8 @@ require([
 
         var waterStorageData = snowpackDataNested[0].values.concat(soilMoistureDataNested[0].values);
         var waterFluxData = precipDataNested[0].values.concat(evapoDataNested[0].values);
+
+        console.log(evapoDataNested);
 
         //create container for each data group
         var features = svg.selectAll('features')
