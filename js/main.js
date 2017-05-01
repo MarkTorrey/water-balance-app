@@ -147,6 +147,7 @@ require([
     $(window).resize(function() {
         if(app.mainChart){
             app.mainChart.resize();
+            app.monthlyTrendChart.resize();
         }
     });
 
@@ -928,7 +929,11 @@ require([
 
             var tooltipContent = '<b>' + timeFormatWithMonth(new Date(closestTimeValue)) + '</b><br>';
 
-            var tooltipX = (mousePositionX > prevMouseXPosition) ? d3.event.pageX - 160 : (d3.event.pageX + 50 < container.width()) ?  d3.event.pageX + 5 : d3.event.pageX - 160;
+            var tooltipX = (mousePositionX > prevMouseXPosition) ? d3.event.pageX - 160 : (d3.event.pageX + 160 < container.width()) ?  d3.event.pageX + 5 : d3.event.pageX - 160;
+
+            console.log("d3.event.pageX", d3.event.pageX);
+
+            console.log("container.width", container.width());
 
             currentTimeValueByMousePosition = closestTimeValue;
 
@@ -1394,6 +1399,7 @@ require([
         // Adds the svg canvas
         var svg = d3.select(containerID)
             .append("svg")
+                .attr('class', 'monthly-trend-chart-svg')
                 .attr("width", width + margin.left + margin.right)
                 .attr("height", height + margin.top + margin.bottom)
             .append("g")
@@ -1528,7 +1534,34 @@ require([
 
             lines.transition().duration(1000).attr('d', function(d){
                 return createLine(d.values);
-            })
+            });
+        }
+
+        this.resize = function(){
+            width = container.width() - margin.left - margin.right - 5;
+            height = container.height() - margin.top - margin.bottom - 5;
+
+            // Update the range of the scale with new width/height
+            xScale.rangeRoundBands([margin.left, width], 1);
+            yScale.range([height - margin.top, 0]);
+
+            yAxis.innerTickSize(-(width - margin.left));
+
+            // // Update the tick marks
+            // xAxis.ticks(Math.max(width/75, 2));
+
+            // Update the axis and text with the new scale
+            xAxisG.attr("transform", "translate(0," + (height - margin.top) + ")").call(xAxis);
+            yAxisG.call(yAxis);
+
+            d3.select(".monthly-trend-chart-svg")
+                .attr("width", width + margin.left + margin.right)
+                .attr("height", height + margin.top + margin.bottom);
+
+            lines.attr('d', function(d){
+                return createLine(d.values);
+            });
+
         }
 
         this.highlightTrendLineByMonth = function(month){
@@ -1555,34 +1588,6 @@ require([
             $(".month-select").val(month);
         }
     }
-
-    // function highlightTrendLineByMonth(month){
-
-    //     // $(".monthly-trend-chart-title-div").html("Trend Analyzer");
-
-    //     var dataLayerType = $(".data-layer-select").val();
-
-    //     d3.selectAll(".monthly-trend-line").style("opacity", 0);
-    //     d3.selectAll(".monthly-trend-line").style("stroke-width", 1);
-
-    //     d3.selectAll(".monthly-trend-line").each(function(d){
-    //         var lineElement = d3.select(this).node();
-
-    //         if(d.key !== month && d.dataType === dataLayerType){
-    //             d3.select(lineElement).style("opacity", 0.2);
-    //             d3.select(lineElement).style("stroke-width", 1);
-    //         }  
-    //         else if(d.key === month && d.dataType === dataLayerType){
-    //             // console.log("highlight", lineElement);
-    //             d3.select(lineElement).style("opacity", 1);
-    //             d3.select(lineElement).style("stroke-width", 3);
-    //         } 
-
-    //     });
-
-    //     $(".month-select").val(month);
-    // }
-
 
     function getColorByKey(key){
 

@@ -154,10 +154,20 @@ div.search-input-wrapper > div {
     z-index: 1000;
     /*display: flex;*/
     display: none;
+
+    flex-direction: row;
+    flex-wrap: wrap;
+    /*justify-content: center;
+    align-content: flex-start;
+    align-items: flex-start;*/
 }
 
 .bottom-pane.visible {
     display: flex;
+}
+
+.bottom-pane > div {
+    height: 100%;
 }
 
 .bottom-pane > div.pie-chart-wrapper {
@@ -197,7 +207,7 @@ div.search-input-wrapper > div {
 .monthly-trend-chart-top-div > .monthly-trend-chart-title-div {
     width: 40%;
     height: 100%;
-    display:flex;
+    display: flex;
     justify-content: center;
     align-items: center;
     font-size: 16px;
@@ -328,6 +338,36 @@ div.main-chart-legend-div > .legend-wrapper >.legend-icon {
     margin-top: -2px;
     vertical-align: middle;
     display: inline-block;
+}
+
+@media (max-width: 1280px) {
+    html, body {
+        overflow: unset;
+    }
+
+    .bottom-pane > div.pie-chart-wrapper {
+        /*background-color: #123456;*/
+        /*width: 25%;*/
+        order: 1
+    }
+
+    .bottom-pane > div.monthly-trend-chart-wrapper {
+        background-color: #fff;
+        width: -webkit-calc(100% - 225px);
+        width:    -moz-calc(100% - 225px);
+        width:         calc(100% - 225px);
+        order: 2
+    }
+
+    .monthly-trend-chart-wrapper > .monthly-trend-chart-top-div { 
+        /*max-width: 350px;*/
+    }
+
+    .bottom-pane > div.line-chart-wrapper {
+        /*background-color: #129876;*/
+        width: 100%;
+        order: 3
+    }
 }
 
 @media (max-width: 767px){
