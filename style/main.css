@@ -161,17 +161,17 @@ div.search-input-wrapper > div {
 }
 
 .bottom-pane > div.pie-chart-wrapper {
-    background-color: #f2f2f2;
-    width: 250px;
+    /*background-color: #f2f2f2;*/
+    width: 225px;
 }
 
 .bottom-pane > div.monthly-trend-chart-wrapper {
     background-color: #f2f2f2;
-    width: 400px;
+    width: 375px;
 }
 
 .monthly-trend-chart-wrapper > .monthly-trend-chart-top-div {
-    width: 90%;
+    width: 95%;
     height: 45px;
     /*background-color: #919191;*/
     margin: 10px auto 0;
@@ -183,7 +183,6 @@ div.search-input-wrapper > div {
 
 .monthly-trend-chart-top-div > .monthly-trend-chart-title-div {
     text-align: center;
-
 }
 
 .monthly-trend-chart-top-div > .dropdown-wrapper{
@@ -229,12 +228,12 @@ div.search-input-wrapper > div {
     height: 50px;
     text-align: center;
     line-height: 50px;
-    font-size: 18px;
+    font-size: 14px;
     /*background-color: #123456;*/
 }
 
 .pie-chart-wrapper > .pie-chart-div {
-    width: 100%;
+    width: 80%;
     /*height: 70%;*/
 
     height: -webkit-calc(100% - 135px);
@@ -289,9 +288,9 @@ div.search-input-wrapper > div {
 }
 
 .bottom-pane > div.line-chart-wrapper {
-    width: -webkit-calc(100% - 650px);
-    width:    -moz-calc(100% - 650px);
-    width:         calc(100% - 650px);
+    width: -webkit-calc(100% - 600px);
+    width:    -moz-calc(100% - 600px);
+    width:         calc(100% - 600px);
     padding: 10px 15px 30px;
 }
 

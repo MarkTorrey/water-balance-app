@@ -703,7 +703,7 @@ require([
         var xAxis = d3.svg.axis()
             .scale(xScale)
             .orient("bottom")
-            // .ticks(uniqueYearValues.length)
+            .ticks(uniqueYearValues.length)
             .tickPadding(5)
             .innerTickSize(-(height - margin.top))
             .tickFormat(timeFormat);
@@ -1044,6 +1044,8 @@ require([
 
             $(".pie-chart-title-text").text("Water Balance - " + formatedTime);
 
+            // $(".pie-chart-title-text").text(formatedTime);
+
             if(!app.pieChart){
                 createPieChart(pieChartData);
             } else {
@@ -1374,7 +1376,7 @@ require([
             return d.key === "Snowpack";
         });
 
-        var uniqueYearValues = chartData[0].values[0].values.map(function(d) {
+        var uniqueYearValues = chartData[0].values[0].values.map(function(d, i) {
             return d.year;
         });
 
@@ -1410,9 +1412,9 @@ require([
 
         var xAxis = d3.svg.axis()
             .innerTickSize(-(height - margin.top))
-            .tickPadding(10)
+            .tickPadding(15)
             .scale(xScale)
-            .ticks(8)
+            .tickValues(xScale.domain().filter(function(d, i) { return !(i % 2); }))
             .orient("bottom");
             
         var yAxis = d3.svg.axis()
@@ -1486,7 +1488,7 @@ require([
             var dataLayerType = $(".data-layer-select").val();
             var monthSelectValue = $(".month-select").val();
 
-            function getYScaleDomainForAnnualTotal(){
+            var getYScaleDomainForAnnualTotal = function(){
                 var chartDataByLayerType = chartData.filter(function(d){
                     return d.key === dataLayerType;
                 })[0];
