@@ -80,11 +80,11 @@ require([
             app.map.on("click", function(event){
                 getImageLayerDataByLocation(event.mapPoint);
             });
+
+            initializeMapTimeAndZExtent();
         });
 
         setOperationalLayersVisibility();
-
-        initializeMapTimeAndZExtent();
 
         initSearchWidget();
 
@@ -104,33 +104,23 @@ require([
         if(targetLayer === "precipitation"){
             app.isWaterStorageChartVisible = false;
 
-            // $('.data-layer-select option').removeAttr('disabled');
             $(".data-layer-select option").removeAttr("selected");
-
             $(".data-layer-select ").val("Precipitation");
-
             $('.data-layer-select option[value="Precipitation"]').attr('selected','selected');
-            // $('.data-layer-select option[category="waterstorage"]').attr('disabled','disabled');
 
-            
+            $(".waterfulx-legend").removeClass("hide");
+            $(".waterstorage-legend").addClass("hide");
 
         } else {
             app.isWaterStorageChartVisible = true;
 
-            // $('.data-layer-select option[value="Soil Moisture"]').attr('selected','selected');
-
-            // $(".data-layer-select option:selected").removeAttr("selected");
-
-            // $('.data-layer-select option').removeAttr('disabled');
             $(".data-layer-select option").removeAttr("selected");
-
             $(".data-layer-select ").val("Soil Moisture");
-
             $('.data-layer-select option[value="Soil Moisture"]').attr('selected','selected');
-            // $('.data-layer-select option[category="waterflux"]').attr('disabled','disabled');
-        }
 
-        $('.legend-wrapper').toggleClass("hide");
+            $(".waterfulx-legend").addClass("hide");
+            $(".waterstorage-legend").removeClass("hide");
+        }
 
         if(app.mainChart){
             app.mainChart.toggleChartViews();
@@ -142,6 +132,18 @@ require([
         }
 
         setOperationalLayersVisibility();
+    });
+
+    $(".legend-wrapper").on("click", function(){
+
+        var targetItem = $(this);
+
+        var selectedLegendItemValue = targetItem.attr("value");
+
+        targetItem.css("opacity", 1);
+        targetItem.siblings().css("opacity", 0.5);
+
+        app.mainChart.highlightChartItemByLegendValue(selectedLegendItemValue);
     });
 
     $(window).resize(function() {
@@ -196,7 +198,10 @@ require([
 
         search.on('search-results', function(response){
             if(response.results["0"] && response.results["0"][0]){
-                getImageLayerDataByLocation(response.results["0"][0].feature.geometry);
+                var resultGeom = response.results["0"][0].feature.geometry;
+
+                app.map.centerAt(resultGeom);
+                getImageLayerDataByLocation(resultGeom);
             }
         });
 
@@ -245,11 +250,9 @@ require([
         addPointToMAp(identifyTaskInputGeometry);
 
         app.operationalLayersURL.forEach(function(d){
-
             executeIdentifyTask(identifyTaskInputGeometry, d.url, d.title).then(function(results){
                 identifyTaskOnSuccessHandler(results);
             });
-
         });
     }
 
@@ -268,13 +271,22 @@ require([
 
         // imageServiceIdentifyTaskParams.timeExtent = getTimeExtent(953121600000, 1481803200000);
 
-        imageServiceIdentifyTaskParams.timeExtent = getTimeExtent(1263556800000, 1481803200000);
+        imageServiceIdentifyTaskParams.timeExtent = getTimeExtent(app.stdTimeInfo[0], app.stdTimeInfo[app.stdTimeInfo.length - 1]);
 
         imageServiceIdentifyTaskParams.mosaicRule = getMosaicRule(imageServiceTitle);
 
         imageServiceIdentifyTask.execute(imageServiceIdentifyTaskParams).then(function(response) {
-            var processedResults = processIdentifyTaskResults(response, imageServiceTitle);
-            deferred.resolve(processedResults);
+            console.log(response);
+
+            if(response.value !== "NoData"){
+                var processedResults = processIdentifyTaskResults(response, imageServiceTitle);
+                deferred.resolve(processedResults);
+            } else {
+                console.log("no data found for this location");
+                domClass.remove(document.body, "app-loading");
+                return;
+            }
+
         });
 
         return deferred.promise;
@@ -431,15 +443,17 @@ require([
     function initializeMapTimeAndZExtent(){
 
         var visibleLayer = getWebMapLayerByVisibility();
-        var visibleLayerTimeInfo = getImageLayerTimeInfo(visibleLayer);
+        // var visibleLayerTimeInfo = getImageLayerTimeInfo(visibleLayer);
         
-        var startTime = convertUnixValueToTime(visibleLayerTimeInfo.timeExtent[0]);
-        var endTime = getEndTimeValue(visibleLayerTimeInfo.timeExtent[0]);
+        // var startTime = convertUnixValueToTime(visibleLayerTimeInfo.timeExtent[0]);
+        // var endTime = getEndTimeValue(visibleLayerTimeInfo.timeExtent[0]);
+
+        var startTime = convertUnixValueToTime(app.stdTimeInfo[app.stdTimeInfo.length - 1]);
+        var endTime = getEndTimeValue(startTime);
 
         setZExtentForImageLayer(visibleLayer);
-        updateMapTimeInfo(startTime, endTime);
 
-        // console.log(visibleLayer);
+        updateMapTimeInfo(startTime, endTime);
     }
 
     function setOperationalLayersVisibility(){
@@ -807,10 +821,13 @@ require([
             .y0(function(d) { return yScale(d.y0); })
             .y1(function(d) { return yScale(d.y0 + d.y); });
 
-        var areas = svg.selectAll(".layer")
+        var areasG = svg.append('g')
+            .attr("class", "area-layers-group");
+        
+        var areas = areasG.selectAll(".area-layer")
             .data(areaChartLayers)
             .enter().append("path")
-            .attr("class", "layer")
+            .attr("class", "area-layer")
             .attr("d", function(d) { return createArea(d.values); })
             .style("fill", function(d, i) { return getColorByKey(d.key); });
 
@@ -930,10 +947,6 @@ require([
             var tooltipContent = '<b>' + timeFormatWithMonth(new Date(closestTimeValue)) + '</b><br>';
 
             var tooltipX = (mousePositionX > prevMouseXPosition) ? d3.event.pageX - 160 : (d3.event.pageX + 160 < container.width()) ?  d3.event.pageX + 5 : d3.event.pageX - 160;
-
-            console.log("d3.event.pageX", d3.event.pageX);
-
-            console.log("container.width", container.width());
 
             currentTimeValueByMousePosition = closestTimeValue;
 
@@ -1059,6 +1072,8 @@ require([
         }
         
         this.toggleChartViews = function(){
+            
+            this.unhighlightChartItems();
 
             if(app.isWaterStorageChartVisible){
                 yScale.domain([0, d3.max(areaChartData, function(d) { return d.y0 + d.y; })]);
@@ -1090,7 +1105,70 @@ require([
             .attr("height", function(d) { 
                 return height - margin.top - yScale(d.value); 
             });
-            
+        }
+
+        this.highlightChartItemByLegendValue = function(legendValue){
+
+            if(legendValue){
+                
+                if(app.isWaterStorageChartVisible){
+
+                    var areaChartDataByLegendValue = areaChartData.filter(function(d){
+                        return d.key === legendValue;
+                    });
+
+                    var areaChartLayersByLegendValue = stack(nest.entries(areaChartDataByLegendValue));
+
+                    yScale.domain([0, d3.max(areaChartDataByLegendValue, function(d) { return d.y0 + d.y; })]);
+
+                    yAxisG.transition().duration(1000).ease("sin-in-out").call(yAxis);  
+
+                    areas.data(areaChartLayersByLegendValue)
+                        .attr("d", function(d) { 
+                            return createArea(d.values); 
+                        })
+                        .style("fill", function(d, i) { 
+                            return getColorByKey(d.key); 
+                        })
+                        .exit().remove();
+
+                } else {
+                    //toggle precip bars or evapo lines
+                    if(legendValue === "Precipitation"){
+                        bars.style("opacity", ".8");
+                        lines.style("opacity", ".2");
+                    } else if (legendValue === "Evapotranspiration"){
+                        bars.style("opacity", ".2");
+                        lines.style("opacity", ".8");
+                    }
+                }
+
+            } else {
+                // reset the visibility of all chart items, and the opacity of all legend-wrapper div
+                this.unhighlightChartItems();
+            }
+        }
+
+        this.unhighlightChartItems = function(){
+            $(".legend-wrapper").css("opacity", 1);
+
+            bars.style("opacity", ".8");
+            lines.style("opacity", ".8");
+
+            areaChartLayers = stack(nest.entries(areaChartData));
+
+            areas.remove();
+
+            areas = areasG.selectAll(".area-layer")
+                .data(areaChartLayers)
+                .enter().append("path")
+                .attr("class", "area-layer")
+                .attr("d", function(d) { 
+                    return createArea(d.values); 
+                })
+                .style("fill", function(d, i) { 
+                    return getColorByKey(d.key); 
+                });
         }
 
         this.resize = function(){
@@ -1158,7 +1236,7 @@ require([
         var height = container.height();
         var radius = Math.min(width, height) / 2;
 
-        container.empty();
+        // container.empty();
         app.pieChart = new PieChart(containerID, width, height, radius, getPieChartData(data));
     }
 
@@ -1188,6 +1266,8 @@ require([
     }
 
     function PieChart(chartContainerID, width, height, radius, dataset){
+
+        // $(chartContainerID).append('<span class="pie-chart-number">123456 mm</span>')
         
         this.width = width;
         this.height = height;
@@ -1198,7 +1278,7 @@ require([
             endAngle: Math.PI * 2
         };
 
-        var tooltip = d3.select("body").append("div").attr("class", "pie-chart-tooltip");
+        // var tooltip = d3.select("body").append("div").attr("class", "pie-chart-tooltip");
 
         var svg = d3.select(chartContainerID).append("svg")
             .attr("width", this.width)
@@ -1207,8 +1287,17 @@ require([
             .append("g")
             .attr("transform", "translate(" + this.width / 2 + "," + this.height / 2 + ")");
 
+        var pieChartLabelText = svg.append("text")
+            .attr("text-anchor", "middle")
+            .attr("x", 0)
+            .attr("y", 0)
+            .style("font-size", "16")
+            .style("fill", "#505050");
+
         var arc = d3.svg.arc()
-            .outerRadius(this.radius);
+            // .outerRadius(this.radius);
+            .outerRadius(this.radius)
+            .innerRadius(this.radius - 25);
 
         var pie = d3.layout.pie()
             .sort(null)
@@ -1262,10 +1351,12 @@ require([
             d3.select(this)
                 .attr("fill", getColorByKey(this._current.data.key))
                 .on("mousemove", function(d){
-                    tooltip.style("left", d3.event.pageX+10+"px");
-                    tooltip.style("top", d3.event.pageY-25+"px");
-                    tooltip.style("display", "inline-block");
-                    tooltip.html(d.data.key + ": " + d.data.value + " mm");
+                    // tooltip.style("left", d3.event.pageX+10+"px");
+                    // tooltip.style("top", d3.event.pageY-25+"px");
+                    // tooltip.style("display", "inline-block");
+                    // tooltip.html(d.data.key + ": " + d.data.value + " mm");
+
+                    pieChartLabelText.text(d.data.value + " mm");
                 })
                 .on("mouseover", function(d){
 
@@ -1280,7 +1371,10 @@ require([
                 })
                 .on("mouseout", function(d){
                     d3.selectAll(".arc").style("opacity", 1);
-                    tooltip.style("display", "none");
+
+                    // tooltip.style("display", "none");
+
+                    pieChartLabelText.text("");
                 });
 
             return function(t) {
@@ -1352,10 +1446,6 @@ require([
                 }
                 annualTotalEntry.values.push(annualValObj)
             });
-
-            // console.log(entries);
-
-            // console.log(annualTotalEntry);
 
             entries.push(annualTotalEntry)
 

@@ -48,7 +48,7 @@
             <span class="title-sub hidden-xs">Click anywhere on earth and see how climate change is affecting the water balance</span>
         </div>
 
-        <div class="search-input-wrapper">
+        <div class="search-input-wrapper hidden-xs">
             <div id="search" class="search-input-div"></div>
         </div>
     </nav>
@@ -75,7 +75,9 @@
                 <span class="pie-chart-title-text"></span>
             </div>
 
-            <div class="pie-chart-div"></div>
+            <div class="pie-chart-div">
+                <!--<div class="pie-chart-number">123456 mm</div>-->
+            </div>
 
             <div class="pie-chart-bottom-div">
 
@@ -102,22 +104,22 @@
         <div class="middle line-chart-wrapper">
             <div class="line-chart-div"></div>
             <div class="main-chart-legend-div">
-                <div class="legend-wrapper waterfulx-legend hide">
+                <div class="legend-wrapper waterfulx-legend hide" value="Precipitation">
                     <span style="background-color: #476C9B;" class="legend-icon"></span>
                     <span class="legend-text">Precipitation</span>
                 </div>
                 
-                <div class="legend-wrapper waterfulx-legend hide">
+                <div class="legend-wrapper waterfulx-legend hide" value="Evapotranspiration">
                     <span style="background-color: #984447;" class="legend-icon"></span>
                     <span class="legend-text">Evapotranspiration</span>
                 </div>
 
-                <div class="legend-wrapper waterstorage-legend">
+                <div class="legend-wrapper waterstorage-legend" value="Soil Moisture">
                     <span style="background-color: #028090;" class="legend-icon"></span>
                     <span class="legend-text">Soil Moisture</span>
                 </div>
                 
-                <div class="legend-wrapper waterstorage-legend">
+                <div class="legend-wrapper waterstorage-legend" value="Snowpack">
                     <span style="background-color: #bcbcbc;" class="legend-icon"></span>
                     <span class="legend-text">Snowpack</span>
                 </div>
