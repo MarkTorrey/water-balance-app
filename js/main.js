@@ -134,7 +134,9 @@ require([
         setOperationalLayersVisibility();
     });
 
-    $(".legend-wrapper").on("click", function(){
+    $(".legend-wrapper").on("click", function(event){
+
+        event.stopPropagation();
 
         var targetItem = $(this);
 
@@ -144,6 +146,10 @@ require([
         targetItem.siblings().css("opacity", 0.5);
 
         app.mainChart.highlightChartItemByLegendValue(selectedLegendItemValue);
+    });
+
+    $(".main-chart-legend-div").on("click", function(){
+        app.mainChart.toggleChartViews();
     });
 
     $(window).resize(function() {
@@ -688,7 +694,7 @@ require([
         });
 
         // Set the dimensions of the canvas / graph
-        var margin = {top: 20, right: 10, bottom: 5, left: 35};
+        var margin = {top: 20, right: 10, bottom: 5, left: 40};
         var width = container.width() - margin.left - margin.right;
         var height = container.height() - margin.top - margin.bottom;
 
@@ -1152,23 +1158,25 @@ require([
         this.unhighlightChartItems = function(){
             $(".legend-wrapper").css("opacity", 1);
 
-            bars.style("opacity", ".8");
-            lines.style("opacity", ".8");
+            if(app.isWaterStorageChartVisible){
+                areaChartLayers = stack(nest.entries(areaChartData));
 
-            areaChartLayers = stack(nest.entries(areaChartData));
+                areas.remove();
 
-            areas.remove();
-
-            areas = areasG.selectAll(".area-layer")
-                .data(areaChartLayers)
-                .enter().append("path")
-                .attr("class", "area-layer")
-                .attr("d", function(d) { 
-                    return createArea(d.values); 
-                })
-                .style("fill", function(d, i) { 
-                    return getColorByKey(d.key); 
-                });
+                areas = areasG.selectAll(".area-layer")
+                    .data(areaChartLayers)
+                    .enter().append("path")
+                    .attr("class", "area-layer")
+                    .attr("d", function(d) { 
+                        return createArea(d.values); 
+                    })
+                    .style("fill", function(d, i) { 
+                        return getColorByKey(d.key); 
+                    });
+            } else {
+                bars.style("opacity", ".8");
+                lines.style("opacity", ".8");
+            }
         }
 
         this.resize = function(){
