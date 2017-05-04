@@ -1,8 +1,4 @@
 require([
-    "configs/uiConfig",
-    "app_modules/initUI",
-    "app_modules/initApp",
-
     "esri/map",
     "esri/layers/ArcGISImageServiceLayer", 
     "esri/layers/ImageServiceParameters",
@@ -33,8 +29,6 @@ require([
     "dojo/_base/connect",
     "dojo/Deferred"
 ], function (
-    uiConfig, initUI, Application,
-
     Map, ArcGISImageServiceLayer, ImageServiceParameters,
     Graphic, Point, SimpleMarkerSymbol, SimpleLineSymbol, Color,
     arcgisPortal, OAuthInfo, esriId,
@@ -236,15 +230,15 @@ require([
 
                 domClass.remove(document.body, "app-loading");
 
-                chartData = chartData.filter(function(d){
+                var mianChartData = chartData.filter(function(d){
                     return d.key !== "Runoff";
                 });
-            
+
                 toggleBottomPane(true);
 
                 app.monthlyTrendChart = new MonthlyTrendChart(chartData);
 
-                app.mainChart = new MainChart(chartData);
+                app.mainChart = new MainChart(mianChartData);
 
             }
         };
@@ -589,9 +583,19 @@ require([
 
         var selectedMonth = $(".month-select").val();
 
+        var selectedDataLayer = $(".data-layer-select").val();
+
         app.monthlyTrendChart.highlightTrendLineByMonth(selectedMonth);
 
         app.monthlyTrendChart.updateChartScale();
+
+        if(selectedDataLayer === "Soil Moisture" || selectedDataLayer === "Snowpack"){
+            $('.month-select option[value="Annual"]').text("Annual Average");
+        } else {
+            $('.month-select option[value="Annual"]').text("Annual Total");
+        }
+
+        console.log(selectedDataLayer);
     }
 
     function signInToArcGISPortal(){
@@ -621,7 +625,7 @@ require([
 
         container.empty();
 
-        $("tooltip").remove();
+        $(".tooltip").remove();
 
         // console.log(data);
 
@@ -1062,7 +1066,13 @@ require([
                 "value": precipData[0].value - evapoData[0].value - runoffData[0].value
             };
 
-            var pieChartData = runoffData.concat(evapoData).concat([surfaceChangingStorageData]);
+            var pieChartData = runoffData.concat(evapoData, [surfaceChangingStorageData]);
+
+            // console.log(precipData[0].value);
+
+            pieChartData.forEach(function(d){
+                d.pct = (d.value / precipData[0].value * 100).toFixed(0);
+            });
 
             var formatedTime = timeFormatWithMonth(new Date(time));
 
@@ -1299,7 +1309,7 @@ require([
             .attr("text-anchor", "middle")
             .attr("x", 0)
             .attr("y", 0)
-            .style("font-size", "16")
+            .style("font-size", "12")
             .style("fill", "#505050");
 
         var arc = d3.svg.arc()
@@ -1338,6 +1348,7 @@ require([
                     this._current = {
                         data: d.data,
                         value: d.value,
+                        pct: d.pct,
                         startAngle: enterAntiClockwise.startAngle,
                         endAngle: enterAntiClockwise.endAngle
                     };
@@ -1358,14 +1369,6 @@ require([
 
             d3.select(this)
                 .attr("fill", getColorByKey(this._current.data.key))
-                .on("mousemove", function(d){
-                    // tooltip.style("left", d3.event.pageX+10+"px");
-                    // tooltip.style("top", d3.event.pageY-25+"px");
-                    // tooltip.style("display", "inline-block");
-                    // tooltip.html(d.data.key + ": " + d.data.value + " mm");
-
-                    pieChartLabelText.text(d.data.value + " mm");
-                })
                 .on("mouseover", function(d){
 
                     d3.selectAll(".arc").each(function(item){
@@ -1376,11 +1379,21 @@ require([
                             d3.select(arcElement).style("opacity", 0.6);
                         }
                     });
+
+                    pieChartLabelText.selectAll("tspan").remove();
+
+                    var labelTextForDataKey = pieChartLabelText.append("tspan")
+                        .attr("dy", 0)
+                        .attr("x",0)
+                        .text(this._current.data.key);
+
+                    var labelTextForDataValue = pieChartLabelText.append("tspan")
+                        .attr("dy", "1.2em") // offest by 1.2 em
+                        .attr("x",0)
+                        .text(d.data.value + " mm " + "(" + this._current.data.pct.toString().split(".")[0] + "%)");
                 })
                 .on("mouseout", function(d){
                     d3.selectAll(".arc").style("opacity", 1);
-
-                    // tooltip.style("display", "none");
 
                     pieChartLabelText.text("");
                 });
@@ -1447,11 +1460,14 @@ require([
 
             annualValuesSum.forEach(function(item, index){
                 var year = entries[0].values[index].year;
+
+                var value = (d.key === "Soil Moisture" || d.key === "Snowpack") ? item / 12 : item;
+
                 var annualValObj =  {
                     "month": "Annual",
-                    "value": item,
+                    "value": value,
                     "year": year
-                }
+                };
                 annualTotalEntry.values.push(annualValObj)
             });
 
@@ -1479,6 +1495,10 @@ require([
             return d.key === "Snowpack";
         });
 
+        var runoffData = data.filter(function(d){
+            return d.key === "Runoff";
+        });
+
         var uniqueYearValues = chartData[0].values[0].values.map(function(d, i) {
             return d.year;
         });
@@ -1488,6 +1508,8 @@ require([
         var container = $(containerID);
 
         container.empty();
+
+        $(".tooltip-monthly-trend-chart").remove();
 
         // Set the dimensions of the canvas / graph
         var margin = {top: 5, right: 0, bottom: 20, left: 20};
@@ -1565,8 +1587,12 @@ require([
             return d.key === "Snowpack";
         });
 
+        var runoffDataNested = chartData.filter(function(d){
+            return d.key === "Runoff";
+        });
+
         var waterStorageData = snowpackDataNested[0].values.concat(soilMoistureDataNested[0].values);
-        var waterFluxData = precipDataNested[0].values.concat(evapoDataNested[0].values);
+        var waterFluxData = precipDataNested[0].values.concat(evapoDataNested[0].values, runoffDataNested[0].values);
 
         //create container for each data group
         var features = svg.selectAll('features')
@@ -1585,7 +1611,78 @@ require([
             })
             .style('opacity', "0.2")
             .attr('stroke-width', 1)
-            .attr('fill', 'none');  
+            .attr('fill', 'none'); 
+
+        // var tooltipDiv = d3.select("body")
+        //     .append("div")
+        //     .attr("class", "tooltip-monthly-trend-chart")
+        //     .style("display", "none");      
+
+        var verticalLine = svg.append('line')
+            .attr({
+                'x1': 0,
+                'y1': 0,
+                'x2': 0,
+                'y2': height - margin.top
+            })
+            .style("display", "none")
+            .attr("stroke", "#909090")
+            .attr('class', 'monthly-trend-chart-verticalLine');
+
+        var overlay = svg.append("rect")
+            .attr("class", "overlay")
+            .attr("width", width)
+            .attr("height", height)
+            .on("mouseover", function() { 
+                verticalLine.style("display", null); 
+                tooltipDiv.style("display", null);
+
+            })
+            .on("mouseout", function() { 
+                verticalLine.style("display", "none"); 
+                tooltipDiv.style("display", "none"); 
+
+            })
+            .on("mousemove", mousemove);
+
+        function mousemove(){
+            var tickPos = xScale.range();
+            
+            var m = d3.mouse(this),
+                lowDiff = 1e99, //positive infinite
+                xI = null;
+                
+            for (var i = 0; i < tickPos.length; i++){
+                var diff = Math.abs(m[0] - tickPos[i]);
+                if (diff < lowDiff){
+                    lowDiff = diff;
+                    xI = i;
+                }
+            }
+
+            verticalLine.attr("transform", function () {
+                return "translate(" + tickPos[xI] + ", 0)";
+            });  
+
+            var dataLayerType = $(".data-layer-select").val();
+            var monthSelectValue = $(".month-select").val();
+
+            var chartDataByLayerType = chartData.filter(function(d){
+                return d.key === dataLayerType;
+            })[0];
+
+            var chartDataByLayerTypeAndMonth = chartDataByLayerType.values.filter(function(d){
+                return d.key === monthSelectValue;
+            })[0];
+
+            // console.log(chartDataByLayerTypeAndMonth.values[xI]);
+
+            var tooltipContent = chartDataByLayerTypeAndMonth.values[xI].year +  " " + chartDataByLayerTypeAndMonth.values[xI].month; 
+
+            // tooltipDiv.html(tooltipContent)
+            //     .style("left", Math.max(0, d3.event.pageX - 50) + "px")
+            //     .style("top", (d3.event.pageY) + "px");   
+        }
 
         this.updateChartScale = function(){
             
@@ -1606,7 +1703,7 @@ require([
                 return [0, annualTotalDataMax];
             }
 
-            if(dataLayerType === "Precipitation" || dataLayerType === "Evapotranspiration" ){
+            if(dataLayerType === "Precipitation" || dataLayerType === "Evapotranspiration" || dataLayerType === "Runoff" ){
 
                 if(monthSelectValue !== "Annual"){
                     yScale.domain(
@@ -1659,6 +1756,8 @@ require([
             lines.attr('d', function(d){
                 return createLine(d.values);
             });
+
+            overlay.attr("width", width).attr("height", height);
 
         }
 

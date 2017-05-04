@@ -236,20 +236,20 @@ div.search-input-wrapper > div {
 
 .pie-chart-wrapper > .pie-chart-title-div {
     width: 100%;
-    height: 50px;
+    height: 55px;
     text-align: center;
-    line-height: 50px;
-    font-size: 14px;
+    line-height: 55px;
+    font-size: 15px;
     /*background-color: #123456;*/
 }
 
 .pie-chart-wrapper > .pie-chart-div {
-    width: 80%;
+    width: 85%;
     /*height: 70%;*/
 
-    height: -webkit-calc(100% - 135px);
-    height:    -moz-calc(100% - 135px);
-    height:         calc(100% - 135px);
+    height: -webkit-calc(100% - 100px);
+    height:    -moz-calc(100% - 100px);
+    height:         calc(100% - 100px);
 
     /*background-color: #909090;*/
     text-align: center;
@@ -294,10 +294,11 @@ div.search-input-wrapper > div {
 
 .pie-chart-bottom-div > .pie-chart-footnote-div {
     width: 100%;
-    height: 15px;
+    height: 20px;
     /*background-color: #987654;*/
     text-align: center;
-    line-height: 15px;
+    line-height: 20px;
+    margin-top: 10px;
 }
 
 .bottom-pane > div.line-chart-wrapper {
@@ -414,6 +415,20 @@ div.tooltip {
     border-radius: 2px;
     z-index: 1000;
 }   
+
+/*div.tooltip-monthly-trend-chart {
+    font: 12px sans-serif;	
+    position: absolute;	
+    text-align: left;	
+    width: 100px;	
+    height: 30px;		
+    padding: 5px;	
+    background: rgba(250, 250, 250, 0.9);	
+    box-shadow: 3px 3px 7px rgba(50, 50, 50, 0.3);
+    border: 0px;					
+    border-radius: 2px;
+    z-index: 1000;
+}   */
 
 .overlay {
     fill: none;
