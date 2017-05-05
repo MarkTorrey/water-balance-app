@@ -594,8 +594,6 @@ require([
         } else {
             $('.month-select option[value="Annual"]').text("Annual Total");
         }
-
-        console.log(selectedDataLayer);
     }
 
     function signInToArcGISPortal(){
@@ -937,7 +935,7 @@ require([
                 return "translate(" + xPosByClosestTimeValue + ", 0)";
             });  
 
-            d3.select(".highlightRefLineLabeltext").text(timeFormatWithMonth(new Date(closestTimeValue)));
+            d3.select(".highlightRefLineLabeltext").text(timeFormatWithMonth(moment.utc(closestTimeValue)));
         }
 
         function dragend(d){
@@ -1479,6 +1477,8 @@ require([
             };
         });
 
+        console.log(chartData);
+
         var precipData = data.filter(function(d){
             return d.key === "Precipitation";
         });
@@ -1512,7 +1512,7 @@ require([
         $(".tooltip-monthly-trend-chart").remove();
 
         // Set the dimensions of the canvas / graph
-        var margin = {top: 5, right: 0, bottom: 20, left: 20};
+        var margin = {top: 15, right: 0, bottom: 20, left: 20};
         var width = container.width() - margin.left - margin.right;
         var height = container.height() - margin.top - margin.bottom;
 
@@ -1613,11 +1613,6 @@ require([
             .attr('stroke-width', 1)
             .attr('fill', 'none'); 
 
-        // var tooltipDiv = d3.select("body")
-        //     .append("div")
-        //     .attr("class", "tooltip-monthly-trend-chart")
-        //     .style("display", "none");      
-
         var verticalLine = svg.append('line')
             .attr({
                 'x1': 0,
@@ -1629,19 +1624,69 @@ require([
             .attr("stroke", "#909090")
             .attr('class', 'monthly-trend-chart-verticalLine');
 
+        var tooltipWrapperRectHeight = 15;
+        var tooltipWrapperRectWidth = 60;
+        var tooltipWrapperRectForYValueWidth = 40;
+
+        var tooltipGroupForXValue = svg.append("g")
+            .attr("class", "tooltip-group")
+            .style("display", "none")
+            .attr("transform", "translate(0, 0)");
+
+        var tooltipWrapperRectForXValue = tooltipGroupForXValue.append('rect')
+            .attr('width', tooltipWrapperRectWidth)
+            .attr('height', tooltipWrapperRectHeight)
+            .attr("transform", "translate(0, 0)")
+            .attr('class', 'tooltip-wrapper-rect')
+            .style('opacity', 0.5)
+            .style('fill', '#fff');
+
+        var tooltipTextForXValue = tooltipGroupForXValue.append("text")
+            .attr('class', 'tooltip-text')
+            .attr('x', tooltipWrapperRectWidth/2)
+            .attr('y', tooltipWrapperRectHeight/2)
+            .attr("text-anchor", "middle")
+            .attr("alignment-baseline", "central")
+            // .text("Jan 2010")
+            .style('fill', '#303030');
+
+        var tooltipGroupForYValue = svg.append("g")
+            .attr("class", "tooltip-group")
+            .style("display", "none")
+            .attr("transform", "translate(0, 60)");
+
+        var tooltipWrapperRectForYValue = tooltipGroupForYValue.append('rect')
+            .attr('width', tooltipWrapperRectForYValueWidth)
+            .attr('height', tooltipWrapperRectHeight)
+            .attr("transform", "translate(0, 0)")
+            .attr('class', 'tooltip-wrapper-rect')
+            .style('opacity', 0.7)
+            .style('fill', '#fff');
+
+        var tooltipTextForYValue = tooltipGroupForYValue.append("text")
+            .attr('class', 'tooltip-text')
+            .attr('x', tooltipWrapperRectForYValueWidth/2)
+            .attr('y', tooltipWrapperRectHeight/2)
+            .attr("text-anchor", "middle")
+            .attr("alignment-baseline", "central")
+            // .text("45.35 mm")
+            .style('fill', '#303030');
+
         var overlay = svg.append("rect")
             .attr("class", "overlay")
             .attr("width", width)
             .attr("height", height)
             .on("mouseover", function() { 
                 verticalLine.style("display", null); 
-                tooltipDiv.style("display", null);
 
+                tooltipGroupForXValue.style("display", null);
+                tooltipGroupForYValue.style("display", null);
             })
             .on("mouseout", function() { 
                 verticalLine.style("display", "none"); 
-                tooltipDiv.style("display", "none"); 
 
+                tooltipGroupForXValue.style("display", "none");
+                tooltipGroupForYValue.style("display", "none");
             })
             .on("mousemove", mousemove);
 
@@ -1675,13 +1720,21 @@ require([
                 return d.key === monthSelectValue;
             })[0];
 
-            // console.log(chartDataByLayerTypeAndMonth.values[xI]);
+            var xValueByMousePos = "20" + chartDataByLayerTypeAndMonth.values[xI].year +  " " + chartDataByLayerTypeAndMonth.values[xI].month.substring(0, 3); 
 
-            var tooltipContent = chartDataByLayerTypeAndMonth.values[xI].year +  " " + chartDataByLayerTypeAndMonth.values[xI].month; 
+            var yValueByMousePos =  chartDataByLayerTypeAndMonth.values[xI].value;
 
-            // tooltipDiv.html(tooltipContent)
-            //     .style("left", Math.max(0, d3.event.pageX - 50) + "px")
-            //     .style("top", (d3.event.pageY) + "px");   
+            tooltipTextForXValue.text(xValueByMousePos);
+
+            tooltipTextForYValue.text(round(yValueByMousePos, 0));
+
+            tooltipGroupForXValue.attr("transform", function () {
+                return "translate(" + (tickPos[xI] - tooltipWrapperRectWidth/2) + ", " + (-tooltipWrapperRectHeight) + ")";
+            });  
+
+            tooltipGroupForYValue.attr("transform", function () {
+                return "translate(" + (xI <= 7 ? tickPos[xI] + 2 : tickPos[xI] - tooltipWrapperRectForYValueWidth - 2) + ", " + (yScale(yValueByMousePos) - tooltipWrapperRectHeight / 2) + ")";
+            });  
         }
 
         this.updateChartScale = function(){
@@ -1812,5 +1865,10 @@ require([
         }
         return color;
     }
+
+    function round(value, decimals) {
+        return Number(Math.round(value+'e'+decimals)+'e-'+decimals);
+    }
+
 
 });
