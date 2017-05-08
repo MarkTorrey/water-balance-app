@@ -150,6 +150,10 @@ require([
         app.mainChart.toggleChartViews();
     });
 
+    $(".app-message-wrapper").on("click", function(){
+        $(this).removeClass("show");
+    }); 
+
     $(window).resize(function() {
         if(app.mainChart){
             app.mainChart.resize();
@@ -203,8 +207,6 @@ require([
         search.on('search-results', function(response){
             if(response.results["0"] && response.results["0"][0]){
                 var resultGeom = response.results["0"][0].feature.geometry;
-
-                app.map.centerAt(resultGeom);
                 getImageLayerDataByLocation(resultGeom);
             }
         });
@@ -245,6 +247,8 @@ require([
 
         domClass.add(document.body, "app-loading");
 
+        app.map.centerAt(identifyTaskInputGeometry);
+
         toggleBottomPane(false);
 
         addPointToMAp(identifyTaskInputGeometry);
@@ -278,6 +282,7 @@ require([
             } else {
                 console.log("no data found for this location");
                 domClass.remove(document.body, "app-loading");
+                $(".app-message-wrapper").addClass("show");
                 return;
             }
         });
