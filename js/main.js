@@ -105,6 +105,8 @@ require([
             $(".waterfulx-legend").removeClass("hide");
             $(".waterstorage-legend").addClass("hide");
 
+            $('.month-select option[value="Annual"]').text("Annual Total");
+
         } else {
             app.isWaterStorageChartVisible = true;
 
@@ -114,6 +116,8 @@ require([
 
             $(".waterfulx-legend").addClass("hide");
             $(".waterstorage-legend").removeClass("hide");
+
+            $('.month-select option[value="Annual"]').text("Annual Average");
         }
 
         if(app.mainChart){
@@ -884,6 +888,8 @@ require([
 
             var tooltipX = (mousePositionX > prevMouseXPosition) ? d3.event.pageX - 160 : (d3.event.pageX + 160 < container.width()) ?  d3.event.pageX + 5 : d3.event.pageX - 160;
 
+            var monthlySelectValue = $(".month-select").val();
+
             currentTimeValueByMousePosition = closestTimeValue;
 
             d3.select(".verticalLine").attr("transform", function () {
@@ -911,8 +917,10 @@ require([
                 .style("left", Math.max(0, tooltipX) + "px")
                 .style("top", (d3.event.pageY - 50) + "px");   
 
-            app.monthlyTrendChart.highlightTrendLineByMonth(timeFormatFullMonthName(new Date(closestTimeValue)));
-            
+            if(monthlySelectValue !== "MonthlyNormals" && monthlySelectValue !== "Annual"){
+                app.monthlyTrendChart.highlightTrendLineByMonth(timeFormatFullMonthName(new Date(closestTimeValue)));
+            } 
+                
             getPieChartDataByTime(closestTimeValue);
 
             setTimeout(function(){
@@ -920,15 +928,23 @@ require([
             }, 500);
         }
 
-        function updateMapAndChartByTime(time){
+        function updateMapAndChartByTime(time, isInitialSetup){
             var startDate = new Date(time);
             var endDate = getEndTimeValue(time);
+
+            var monthlySelectValue = $(".month-select").val();
 
             app.selectedMonth = timeFormatFullMonthName(startDate);
 
             updateMapTimeInfo(startDate, endDate);
 
-            app.monthlyTrendChart.highlightTrendLineByMonth(app.selectedMonth);
+            if(isInitialSetup){
+                app.monthlyTrendChart.highlightTrendLineByMonth(app.selectedMonth);
+            } else {
+                if(monthlySelectValue !== "MonthlyNormals" && monthlySelectValue !== "Annual"){
+                    app.monthlyTrendChart.highlightTrendLineByMonth(app.selectedMonth);
+                } 
+            }
 
             setHighlightRefLineByTime(time);
             
@@ -1164,7 +1180,7 @@ require([
 
         }
 
-        updateMapAndChartByTime(highlightTimeValue);
+        updateMapAndChartByTime(highlightTimeValue, true);
 
         this.toggleChartViews();
 
@@ -1405,17 +1421,6 @@ require([
             };
         });
 
-        chartData.forEach(function(d){
-            d.values.forEach(function(k){
-                var sumOfAllYearsValue = k.values.reduce(function (acc, obj) {
-                    return acc + obj.value;
-                }, 0);
-                k.normalizedValue = sumOfAllYearsValue/12;
-            });
-        });
-
-        // console.log(chartData); 
-
         var precipData = data.filter(function(d){
             return d.key === "Precipitation";
         });
@@ -1444,7 +1449,26 @@ require([
             return d.key;
         });
 
-        // console.log(uniqueMonthValues); 
+        uniqueMonthValues = uniqueMonthValues.filter(function(d){
+            return d !== "Annual"
+        });
+
+        chartData.forEach(function(d){
+            d.values.forEach(function(k){
+                var allYearsValue = k.values.filter(function(value){
+                    return value.month !== "Annual";
+                });
+
+                var sumOfAllYearsValue = allYearsValue.reduce(function (acc, obj) {
+                    return acc + obj.value;
+                }, 0);
+
+                k.normalizedValue = sumOfAllYearsValue/uniqueYearValues.length;
+            });
+        });
+
+        // console.log(chartData); 
+
 
         var containerID = ".monthly-trend-chart-div";
 
@@ -1489,6 +1513,16 @@ require([
             .scale(xScale)
             .tickValues(xScale.domain().filter(function(d, i) { return !(i % 2); }))
             .orient("bottom");
+
+        var xAxisForMonthlyNormals = d3.svg.axis()
+            .innerTickSize(-(height - margin.top))
+            .tickPadding(15)
+            .scale(xScaleForMonthlyNormals)
+            .tickValues(xScaleForMonthlyNormals.domain().filter(function(d, i) { return !(i % 2); }))
+            .tickFormat(function(d){
+                return d.substring(0, 3);
+            })
+            .orient("bottom");
             
         var yAxis = d3.svg.axis()
             .scale(yScale)
@@ -1501,6 +1535,11 @@ require([
             .attr("class", "x axis")
             .attr("transform", "translate(0," + (height - margin.top) + ")")
             .call(xAxis);
+
+        var xAxisGForMonthlyNormals  = svg.append("svg:g")
+            .attr("class", "x axis")
+            .attr("transform", "translate(0," + (height - margin.top) + ")")
+            .call(xAxisForMonthlyNormals);
             
         var yAxisG = svg.append("svg:g")
             .attr("class", "y axis")
@@ -1515,6 +1554,15 @@ require([
             })
             .y(function(d) {
                 return yScale(+d.value);
+            })
+            .interpolate("monotone");
+
+        var createLineForMonthlyNormals = d3.svg.line()
+            .x(function(d) {
+                return xScaleForMonthlyNormals(d.key);
+            })
+            .y(function(d) {
+                return yScale(+d.normalizedValue);
             })
             .interpolate("monotone");
 
@@ -1541,7 +1589,7 @@ require([
         var waterStorageData = snowpackDataNested[0].values.concat(soilMoistureDataNested[0].values);
         var waterFluxData = precipDataNested[0].values.concat(evapoDataNested[0].values, runoffDataNested[0].values);
 
-        //create container for each data group
+        //create features group for each data group
         var features = svg.selectAll('features')
 			.data(waterStorageData.concat(waterFluxData))
             .enter().append('g')
@@ -1559,6 +1607,33 @@ require([
             .style('opacity', "0.2")
             .attr('stroke-width', 1)
             .attr('fill', 'none'); 
+
+        //create features group for each data group
+        var featuresForMonthluNormals = svg.selectAll('features')
+			.data(chartData)
+            .enter().append('g')
+            .attr('class', 'features-for-monthly-normals');
+            
+        //append the line graphic
+        var linesForMonthluNormals = featuresForMonthluNormals.append('path')
+            .attr('class', 'monthly-normal-trend-line')
+            .attr('d', function(d){
+                // console.log(d);
+                return createLineForMonthlyNormals(getMonthlyNormalsData(d));
+            })
+            .attr('stroke', function(d, i) { 
+                return getColorByKey(d.key);
+            })
+            .style('opacity', "0.2")
+            .attr('stroke-width', 1)
+            .attr('fill', 'none'); 
+
+        function getMonthlyNormalsData(data){
+            var monthlyNormalsData = data.values.filter(function(k){
+                return k.key !== "Annual";
+            });
+            return monthlyNormalsData;
+        }
 
         var verticalLine = svg.append('line')
             .attr({
@@ -1638,7 +1713,11 @@ require([
             .on("mousemove", mousemove);
 
         function mousemove(){
-            var tickPos = xScale.range();
+            
+            var dataLayerType = $(".data-layer-select").val();
+            var monthSelectValue = $(".month-select").val();
+
+            var tickPos = (monthSelectValue === "MonthlyNormals") ? xScaleForMonthlyNormals.range() : xScale.range();
             
             var m = d3.mouse(this),
                 lowDiff = 1e99, //positive infinite
@@ -1656,20 +1735,27 @@ require([
                 return "translate(" + tickPos[xI] + ", 0)";
             });  
 
-            var dataLayerType = $(".data-layer-select").val();
-            var monthSelectValue = $(".month-select").val();
-
             var chartDataByLayerType = chartData.filter(function(d){
                 return d.key === dataLayerType;
             })[0];
 
-            var chartDataByLayerTypeAndMonth = chartDataByLayerType.values.filter(function(d){
-                return d.key === monthSelectValue;
-            })[0];
+            var chartDataByLayerTypeAndMonth;
 
-            var xValueByMousePos = "20" + chartDataByLayerTypeAndMonth.values[xI].year +  " " + chartDataByLayerTypeAndMonth.values[xI].month.substring(0, 3); 
+            if(monthSelectValue !== "MonthlyNormals"){
+                chartDataByLayerTypeAndMonth = chartDataByLayerType.values.filter(function(d){
+                    return d.key === monthSelectValue;
+                })[0];
+            } else {
+                chartDataByLayerTypeAndMonth = chartDataByLayerType.values;
+            }
 
-            var yValueByMousePos =  chartDataByLayerTypeAndMonth.values[xI].value;
+            var xValueByMousePos = (monthSelectValue === "MonthlyNormals") ?
+                                    chartDataByLayerTypeAndMonth[xI].key.substring(0, 3) :
+                                    "20" + chartDataByLayerTypeAndMonth.values[xI].year +  " " + chartDataByLayerTypeAndMonth.values[xI].month.substring(0, 3); 
+
+            var yValueByMousePos =  (monthSelectValue === "MonthlyNormals") ?
+                                    round(chartDataByLayerTypeAndMonth[xI].normalizedValue, 1) :
+                                    chartDataByLayerTypeAndMonth.values[xI].value;
 
             tooltipTextForXValue.text(xValueByMousePos);
 
@@ -1703,25 +1789,42 @@ require([
                 return [0, annualTotalDataMax];
             }
 
+            var getYScaleDomainForMonthlyNormals = function(){
+                var chartDataByLayerType = chartData.filter(function(d){
+                    return d.key === dataLayerType;
+                })[0];
+
+                var monthlyNormalsDataMax = d3.max(chartDataByLayerType.values, function(d) {return d.normalizedValue;});
+
+                return [0, monthlyNormalsDataMax];
+            }
+
             if(dataLayerType === "Precipitation" || dataLayerType === "Evapotranspiration" || dataLayerType === "Runoff" ){
 
-                if(monthSelectValue !== "Annual"){
+                if(monthSelectValue === "Annual"){
+                    yScale.domain(getYScaleDomainForAnnualTotal());
+                } 
+                else if(monthSelectValue === "MonthlyNormals"){
+                    yScale.domain(getYScaleDomainForMonthlyNormals());
+                }
+                else {
                     yScale.domain(
                         [0, d3.max(precipData[0].values.concat(evapoData[0].values), function(d) {return d.value;})]
                     );
-                } else {
-                    yScale.domain(getYScaleDomainForAnnualTotal());
                 }
-
             } 
             else if(dataLayerType === "Snowpack" || dataLayerType === "Soil Moisture") {
 
-                if(monthSelectValue !== "Annual"){
+                if(monthSelectValue === "Annual"){
+                    yScale.domain(getYScaleDomainForAnnualTotal());
+                } 
+                else if(monthSelectValue === "MonthlyNormals"){
+                    yScale.domain(getYScaleDomainForMonthlyNormals());
+                }
+                else {
                     yScale.domain(
                         [0, d3.max(soilMoistureData[0].values.concat(snowpackData[0].values), function(d) {return d.value;})]
                     );
-                } else {
-                    yScale.domain(getYScaleDomainForAnnualTotal());
                 }
             }
 
@@ -1729,6 +1832,10 @@ require([
 
             lines.transition().duration(1000).attr('d', function(d){
                 return createLine(d.values);
+            });
+
+            linesForMonthluNormals.transition().duration(1000).attr('d', function(d){
+                return createLineForMonthlyNormals(getMonthlyNormalsData(d));
             });
         }
 
@@ -1738,6 +1845,7 @@ require([
 
             // Update the range of the scale with new width/height
             xScale.rangeRoundBands([margin.left, width], 1);
+            xScaleForMonthlyNormals.rangeRoundBands([margin.left, width], 1);
             yScale.range([height - margin.top, 0]);
 
             yAxis.innerTickSize(-(width - margin.left));
@@ -1747,6 +1855,7 @@ require([
 
             // Update the axis and text with the new scale
             xAxisG.attr("transform", "translate(0," + (height - margin.top) + ")").call(xAxis);
+            xAxisGForMonthlyNormals.attr("transform", "translate(0," + (height - margin.top) + ")").call(xAxisForMonthlyNormals);
             yAxisG.call(yAxis);
 
             d3.select(".monthly-trend-chart-svg")
@@ -1757,32 +1866,56 @@ require([
                 return createLine(d.values);
             });
 
+            linesForMonthluNormals.attr('d', function(d){
+                return createLineForMonthlyNormals(getMonthlyNormalsData(d));
+            })
+
             overlay.attr("width", width).attr("height", height);
 
         }
 
         this.highlightTrendLineByMonth = function(month){
+
             var dataLayerType = $(".data-layer-select").val();
+            var monthlySelectValue = $(".month-select").val();
 
             lines.style("opacity", 0);
             lines.style("stroke-width", 1);
 
-            lines.each(function(d){
-                var lineElement = d3.select(this).node();
+            linesForMonthluNormals.style("opacity", 0);
+            linesForMonthluNormals.style("stroke-width", 1);
 
-                if(d.key !== month && d.dataType === dataLayerType){
-                    d3.select(lineElement).style("opacity", 0.2);
-                    d3.select(lineElement).style("stroke-width", 1);
-                }  
-                else if(d.key === month && d.dataType === dataLayerType){
-                    // console.log("highlight", lineElement);
-                    d3.select(lineElement).style("opacity", 1);
-                    d3.select(lineElement).style("stroke-width", 3);
-                } 
+            xAxisG.style("opacity", 0);
+            xAxisGForMonthlyNormals.style("opacity", 0);
 
-            });
+            if(monthlySelectValue !== "MonthlyNormals"){
+                lines.each(function(d){
+                    var lineElement = d3.select(this).node();
 
-            $(".month-select").val(month);
+                    if(d.key !== month && d.dataType === dataLayerType){
+                        d3.select(lineElement).style("opacity", 0.2);
+                        d3.select(lineElement).style("stroke-width", 1);
+                    }  
+                    else if(d.key === month && d.dataType === dataLayerType){
+                        // console.log("highlight", lineElement);
+                        d3.select(lineElement).style("opacity", 1);
+                        d3.select(lineElement).style("stroke-width", 3);
+                    } 
+                });
+                xAxisG.style("opacity", 1);
+
+                $(".month-select").val(month);
+            } else {
+                linesForMonthluNormals.each(function(d){
+                    var lineElement = d3.select(this).node();
+
+                    if(d.key === dataLayerType){
+                        d3.select(lineElement).style("opacity", 1);
+                        d3.select(lineElement).style("stroke-width", 3);
+                    }  
+                });
+                xAxisGForMonthlyNormals.style("opacity", 1);
+            }            
         }
     }
 
