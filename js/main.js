@@ -41,17 +41,20 @@ require([
     // Enforce strict mode
     'use strict';
 
-    var appConfig = {
-        // "webMapID": "00052bc317b3403babb8ddf9b64efeab", //production
+    var app = {
         "webMapID": "146d270ef13f400da5eeb04c578fe908", //dev 
         "appID": "T2NYnYffgXujL6DV"
     };
 
-    var app = {};
+    // var appConfig = {
+    //     // "webMapID": "00052bc317b3403babb8ddf9b64efeab", //production
+    //     "webMapID": "146d270ef13f400da5eeb04c578fe908", //dev 
+    //     "appID": "T2NYnYffgXujL6DV"
+    // };
 
     // signInToArcGISPortal();
 
-    arcgisUtils.createMap(appConfig.webMapID,"mapDiv").then(function(response){
+    arcgisUtils.createMap(app.webMapID, "mapDiv").then(function(response){
 
         app.map = response.map;
 
@@ -139,13 +142,23 @@ require([
         event.stopPropagation();
 
         var targetItem = $(this);
-
         var selectedLegendItemValue = targetItem.attr("value");
 
-        targetItem.css("opacity", 1);
-        targetItem.siblings().css("opacity", 0.5);
+        if(!targetItem.hasClass("active")){
 
-        app.mainChart.highlightChartItemByLegendValue(selectedLegendItemValue);
+            targetItem.addClass("active");
+            targetItem.css("opacity", 1);
+            targetItem.siblings().css("opacity", 0.5);
+            targetItem.siblings().removeClass("active");
+
+            app.mainChart.highlightChartItemByLegendValue(selectedLegendItemValue);
+        } else {
+            targetItem.removeClass("active");
+            targetItem.css("opacity", 1);
+            targetItem.siblings().css("opacity", 1);
+
+            app.mainChart.toggleChartViews();
+        }
     });
 
     $(".main-chart-legend-div").on("click", function(){
@@ -181,13 +194,10 @@ require([
         layersRequest.then(requestSuccessHandler, requestErrorHandler);
 
         function requestSuccessHandler(response){
-
             var stdTime = response.multidimensionalInfo.variables[0].dimensions.filter(function(d){
                 return d.name === "StdTime";
             })[0];
-
             domClass.remove(document.body, "app-loading");
-
             deferred.resolve(stdTime.values);
         }
 
@@ -301,9 +311,7 @@ require([
         var variableName;
 
         results.catalogItems.features.forEach(function(d, i){
-
             var values = results.properties.Values[i];
-
             if(!variableName){
                 variableName = d.attributes.Variable;
                 mergedResults.push([values]);
@@ -322,7 +330,6 @@ require([
             var joinedValuesInArray = joinedValues.split(" ");
             return joinedValuesInArray;
         });
-
 
         if(mergedResults.length > 1){
             mergedResults.forEach(function(d, i){
@@ -353,14 +360,8 @@ require([
     }
 
     function getMosaicRule(imageServiceTitle){
-
         var mosaicRule = new MosaicRule();
-
-        // mosaicRule.method = MosaicRule.METHOD_NONE;
-        // mosaicRule.operation = MosaicRule.OPERATION_SUM;
-        // mosaicRule.where = "tag='Actual'"
         mosaicRule.where = "tag = 'Composite'";
-
         return mosaicRule;
     }
 
@@ -433,7 +434,6 @@ require([
     }
 
     function getWebMapLayerByVisibility(){
-
         var visibleLayers = app.webMapItems.operationalLayers.filter(function(d){
             return d.visibility === true;
         });
@@ -441,7 +441,6 @@ require([
     }
 
     function getOperationalLayersURL(webMapItems){
-
         var operationalLayersURL = webMapItems.operationalLayers.map(function(d){
             return {
                 "title": d.title,
@@ -451,40 +450,23 @@ require([
         return operationalLayersURL;
     }
 
-    // function getImageLayerTimeInfo(layer){
-
-    //     var timeInfo = layer.resourceInfo.timeInfo;
-    //     app.timeExtent = timeInfo.timeExtent;
-    //     return timeInfo;
-    // }
-
     function updateMapTimeInfo(startTime, endTime){
-
         var timeExtent = new TimeExtent();
         timeExtent.startTime = startTime;
         timeExtent.endTime = endTime;
-
         app.map.setTimeExtent(timeExtent);
     }
 
     function getTimeExtent(startTime, endTime){
-
         var timeExtent = new TimeExtent();
         timeExtent.startTime = new Date(startTime);
         timeExtent.endTime = new Date(endTime);
-
         return timeExtent;
     }
 
     function getEndTimeValue(startTime, timeInterval, esriTimeUnit){
 
         var formatedTimeUnit;
-
-        // switch(esriTimeUnit){
-        //     case "esriTimeUnitsMonths":
-        //         formatedTimeUnit = "months"
-        //         break;
-        // }
 
         timeInterval = timeInterval || 1;
         formatedTimeUnit = formatedTimeUnit || "months";
@@ -652,10 +634,6 @@ require([
         var xScale = d3.time.scale()
             .domain(getDomainFromData(precipData[0].values, "stdTime"))
             .range([0, width - margin.right - xAxisWidthOffset]);
-
-        // var yScale = d3.scale.linear()
-        //     .domain(getDomainFromData(precipData[0].values.concat(evapoData[0].values), "value"))
-        //     .range([(height - margin.top), 0]);
 
         var yScale = d3.scale.linear()
             .domain(getDomainFromData(soilMoistureData[0].values.concat(snowpackData[0].values), "value"))
@@ -1208,7 +1186,6 @@ require([
     }
 
     function updatePieChart(data){
-
         app.pieChart.update(getPieChartData(data));
     }
 
@@ -1233,8 +1210,6 @@ require([
     }
 
     function PieChart(chartContainerID, width, height, radius, dataset){
-
-        // $(chartContainerID).append('<span class="pie-chart-number">123456 mm</span>')
         
         this.width = width;
         this.height = height;
