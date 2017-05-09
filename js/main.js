@@ -72,7 +72,9 @@ require([
             app.stdTimeInfo = stdTimeInfo;
 
             app.map.on("click", function(event){
-                getImageLayerDataByLocation(event.mapPoint);
+                if(!$("body").hasClass("app-loading")){
+                    getImageLayerDataByLocation(event.mapPoint);
+                }
             });
 
             initializeMapTimeAndZExtent();
@@ -1756,7 +1758,7 @@ require([
 
             var xValueByMousePos = (monthSelectValue === "MonthlyNormals") ?
                                     chartDataByLayerTypeAndMonth[xI].key.substring(0, 3) :
-                                    "20" + chartDataByLayerTypeAndMonth.values[xI].year +  " " + chartDataByLayerTypeAndMonth.values[xI].month.substring(0, 3); 
+                                    (monthSelectValue === "Annual") ? "20" + chartDataByLayerTypeAndMonth.values[xI].year : "20" + chartDataByLayerTypeAndMonth.values[xI].year +  " " + chartDataByLayerTypeAndMonth.values[xI].month.substring(0, 3); 
 
             var yValueByMousePos =  (monthSelectValue === "MonthlyNormals") ?
                                     round(chartDataByLayerTypeAndMonth[xI].normalizedValue, 1) :
