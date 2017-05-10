@@ -395,6 +395,7 @@ require([
         var endTime = getEndTimeValue(startTime);
 
         setZExtentForImageLayer(visibleLayer);
+
         updateMapTimeInfo(startTime, endTime);
     }
 
@@ -928,6 +929,7 @@ require([
 
             if(isInitialSetup){
                 app.monthlyTrendChart.highlightTrendLineByMonth(app.selectedMonth);
+                app.monthlyTrendChart.updateChartScale();
             } else {
                 if(monthlySelectValue !== "MonthlyNormals" && monthlySelectValue !== "Annual"){
                     app.monthlyTrendChart.highlightTrendLineByMonth(app.selectedMonth);
@@ -1775,7 +1777,8 @@ require([
             var dataLayerType = $(".data-layer-select").val();
             var monthSelectValue = $(".month-select").val();
 
-            var getYScaleDomainForAnnualTotal = function(){
+            var getYScaleDomainForSummarizedValues = function(){
+
                 var chartDataByLayerType = chartData.filter(function(d){
                     return d.key === dataLayerType;
                 })[0];
@@ -1784,66 +1787,34 @@ require([
                     return d.key === "Annual";
                 })[0];
 
-                var annualTotalDataMax = d3.max(annualTotalData.values, function(d) {return d.value;});
+                var keyName = (monthSelectValue === "Annual") ? "value" : "normalizedValue";
 
-                var annualTotalDataMin = d3.min(annualTotalData.values, function(d) {return d.value;});
+                var maxForYScale = d3.max( (monthSelectValue === "Annual") ? annualTotalData.values : chartDataByLayerType.values, function(d) {return d[keyName];});
 
-                return [annualTotalDataMin, annualTotalDataMax];
+                var minForYScale = d3.min( (monthSelectValue === "Annual") ? annualTotalData.values : chartDataByLayerType.values, function(d) {return d[keyName];});
+
+                return [minForYScale, maxForYScale];
             }
 
-            var getYScaleDomainForMonthlyNormals = function(){
-                var chartDataByLayerType = chartData.filter(function(d){
+            var getYScaleDomainForMonthlyValues = function(){
+
+                var chartDataByLayerType = data.filter(function(d){
                     return d.key === dataLayerType;
-                })[0];
+                });
 
-                var monthlyNormalsDataMax = d3.max(chartDataByLayerType.values, function(d) {return d.normalizedValue;});
+                var maxForYScale = d3.max( chartDataByLayerType[0].values, function(d) {return d.value;});
 
-                var monthlyNormalsDataMin = d3.min(chartDataByLayerType.values, function(d) {return d.normalizedValue;});
+                var minForYScale = d3.min( chartDataByLayerType[0].values, function(d) {return d.value;});
 
-                return [monthlyNormalsDataMin, monthlyNormalsDataMax];
+                return [minForYScale, maxForYScale];              
+
             }
 
-            if(dataLayerType === "Precipitation" || dataLayerType === "Evapotranspiration" || dataLayerType === "Runoff" ){
-
-                if(monthSelectValue === "Annual"){
-                    yScale.domain(getYScaleDomainForAnnualTotal());
-                } 
-                else if(monthSelectValue === "MonthlyNormals"){
-                    yScale.domain(getYScaleDomainForMonthlyNormals());
-                }
-                else {
-                    yScale.domain(
-                        [0, d3.max(precipData[0].values.concat(evapoData[0].values), function(d) {return d.value;})]
-                    );
-                }
-            } 
-            else if(dataLayerType === "ChangeInStorage") {
-
-                if(monthSelectValue === "Annual"){
-                    yScale.domain(getYScaleDomainForAnnualTotal());
-                } 
-                else if(monthSelectValue === "MonthlyNormals"){
-                    yScale.domain(getYScaleDomainForMonthlyNormals());
-                }
-                else {
-                    yScale.domain(
-                        [d3.min(changeInStorageData.values, function(d) {return d.value;}), d3.max(changeInStorageData.values, function(d) {return d.value;})]
-                    );
-                }
+            if(monthSelectValue === "Annual" || monthSelectValue === "MonthlyNormals"){
+                yScale.domain(getYScaleDomainForSummarizedValues());
             }
-            else if(dataLayerType === "Snowpack" || dataLayerType === "Soil Moisture") {
-
-                if(monthSelectValue === "Annual"){
-                    yScale.domain(getYScaleDomainForAnnualTotal());
-                } 
-                else if(monthSelectValue === "MonthlyNormals"){
-                    yScale.domain(getYScaleDomainForMonthlyNormals());
-                }
-                else {
-                    yScale.domain(
-                        [0, d3.max(soilMoistureData[0].values.concat(snowpackData[0].values), function(d) {return d.value;})]
-                    );
-                }
+            else {
+                yScale.domain(getYScaleDomainForMonthlyValues());
             }
 
             yAxisG.transition().duration(1000).ease("sin-in-out").call(yAxis);  
@@ -1935,6 +1906,8 @@ require([
                 xAxisGForMonthlyNormals.style("opacity", 1);
             }            
         }
+
+        // this.updateChartScale();
     }
 
     function getColorByKey(key){
@@ -1952,10 +1925,10 @@ require([
                 color = "#782057"
                 break;
             case "Added to Storage":
-                color = "#468C98"
+                color = "#129876"
                 break;
             case "ChangeInStorage":
-                color = "#468C98"
+                color = "#129876"
                 break;
             case "Snowpack":
                 color = "#bcbcbc"
