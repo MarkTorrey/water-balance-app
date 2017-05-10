@@ -64,7 +64,7 @@ require([
         app.operationalLayersURL = getOperationalLayersURL(app.webMapItems);
 
         //display chart with soil moisture and snowpack data if app.isWaterStorageChartVisible is true; 
-        //otherwise, show chart with precip and evapotranspiration
+        //otherwise, show chart with precip and runoff
         app.isWaterStorageChartVisible = true;
 
         connect.disconnect(response.clickEventHandle);
@@ -244,15 +244,15 @@ require([
 
                 domClass.remove(document.body, "app-loading");
 
-                var mianChartData = chartData.filter(function(d){
-                    return d.key !== "Runoff";
-                });
+                // var mianChartData = chartData.filter(function(d){
+                //     return d.key !== "Runoff";
+                // });
 
                 toggleBottomPane(true);
 
                 app.monthlyTrendChart = new MonthlyTrendChart(chartData);
 
-                app.mainChart = new MainChart(mianChartData);
+                app.mainChart = new MainChart(chartData);
 
             }
         };
@@ -616,6 +616,10 @@ require([
             return d.key === "Soil Moisture";
         });
 
+        var runoffData = data.filter(function(d){
+            return d.key === "Runoff";
+        });
+
         // Set the dimensions of the canvas / graph
         var margin = {top: 20, right: 10, bottom: 5, left: 40};
         var width = container.width() - margin.left - margin.right;
@@ -696,11 +700,10 @@ require([
                 return height - margin.top - yScale(d.value); 
             });
 
-        // console.log("evapoData", evapoData);
-
         //create container for each data group
         var features = svg.selectAll('features')
-            .data(evapoData)
+            // .data(evapoData)
+            .data(runoffData)
             .enter().append('g')
             .attr('class', 'features');
             
@@ -885,7 +888,7 @@ require([
                 if(app.isWaterStorageChartVisible){
                     return d.key === "Soil Moisture" || d.key === "Snowpack";
                 } else {
-                    return d.key === "Precipitation" || d.key === "Evapotranspiration";
+                    return d.key === "Precipitation" || d.key === "Runoff";
                 }
             });
 
@@ -978,27 +981,27 @@ require([
 
             var precipAndEvapoData = getChartDataByTime(time);
 
-            var runoffData = getChartDataByTime(time, [app.runoffData]);
+            var runoffDataByTime = getChartDataByTime(time, [app.runoffData]);
 
-            var precipData = precipAndEvapoData.filter(function(d){
+            var precipDataByTime = precipAndEvapoData.filter(function(d){
                 return d.key === "Precipitation";
             });
 
-            var evapoData = precipAndEvapoData.filter(function(d){
+            var evapoDataByTime = precipAndEvapoData.filter(function(d){
                 return d.key === "Evapotranspiration";
             });
 
             var surfaceChangingStorageData = {
                 "key": "Added to Storage",
-                "value": precipData[0].value - evapoData[0].value - runoffData[0].value
+                "value": precipDataByTime[0].value - evapoDataByTime[0].value - runoffDataByTime[0].value
             };
 
-            var pieChartData = runoffData.concat(evapoData, [surfaceChangingStorageData]);
+            var pieChartData = runoffDataByTime.concat(evapoDataByTime, [surfaceChangingStorageData]);
 
             // console.log(precipData[0].value);
 
             pieChartData.forEach(function(d){
-                d.pct = (d.value / precipData[0].value * 100).toFixed(0);
+                d.pct = (d.value / precipDataByTime[0].value * 100).toFixed(0);
             });
 
             var formatedTime = timeFormatWithMonth(new Date(time));
@@ -1024,7 +1027,7 @@ require([
                 lines.style("opacity", "0");
                 bars.style("opacity", "0");
             } else {
-                yScale.domain(getDomainFromData(precipData[0].values.concat(evapoData[0].values), "value"));
+                yScale.domain(getDomainFromData(precipData[0].values.concat(runoffData[0].values), "value"));
                 areas.style("opacity", "0");
                 lines.style("opacity", ".8");
                 bars.style("opacity", ".8");
@@ -1080,7 +1083,7 @@ require([
                     if(legendValue === "Precipitation"){
                         bars.style("opacity", ".8");
                         lines.style("opacity", ".2");
-                    } else if (legendValue === "Evapotranspiration"){
+                    } else if (legendValue === "Runoff"){
                         bars.style("opacity", ".2");
                         lines.style("opacity", ".8");
                     }
@@ -1343,6 +1346,38 @@ require([
         var getMonthFromTime = d3.time.format("%B");
         var getYearFromTime = d3.time.format("%y");
 
+        var precipData = data.filter(function(d){
+            return d.key === "Precipitation";
+        });
+
+        var evapoData = data.filter(function(d){
+            return d.key === "Evapotranspiration";
+        });
+
+        var soilMoistureData = data.filter(function(d){
+            return d.key === "Soil Moisture";
+        });
+
+        var snowpackData = data.filter(function(d){
+            return d.key === "Snowpack";
+        });
+
+        var runoffData = data.filter(function(d){
+            return d.key === "Runoff";
+        });
+
+        var changeInStorageData = {
+            "key": "ChangeInStorage",
+            "values": precipData[0].values.map(function(d, i){
+                return {
+                    "stdTime": d.stdTime,
+                    "value": d.value - evapoData[0].values[i].value - runoffData[0].values[i].value
+                }
+            })
+        }
+
+        data.push(changeInStorageData);
+
         var chartData = data.map(function(d){
 
             d.values.forEach(function(k){
@@ -1403,26 +1438,6 @@ require([
             };
         });
 
-        var precipData = data.filter(function(d){
-            return d.key === "Precipitation";
-        });
-
-        var evapoData = data.filter(function(d){
-            return d.key === "Evapotranspiration";
-        });
-
-        var soilMoistureData = data.filter(function(d){
-            return d.key === "Soil Moisture";
-        });
-
-        var snowpackData = data.filter(function(d){
-            return d.key === "Snowpack";
-        });
-
-        var runoffData = data.filter(function(d){
-            return d.key === "Runoff";
-        });
-
         var uniqueYearValues = chartData[0].values[0].values.map(function(d, i) {
             return d.year;
         });
@@ -1450,7 +1465,6 @@ require([
         });
 
         // console.log(chartData); 
-
 
         var containerID = ".monthly-trend-chart-div";
 
@@ -1568,8 +1582,12 @@ require([
             return d.key === "Runoff";
         });
 
+        var changeInStorageDataNested = chartData.filter(function(d){
+            return d.key === "ChangeInStorage";
+        });
+
         var waterStorageData = snowpackDataNested[0].values.concat(soilMoistureDataNested[0].values);
-        var waterFluxData = precipDataNested[0].values.concat(evapoDataNested[0].values, runoffDataNested[0].values);
+        var waterFluxData = precipDataNested[0].values.concat(evapoDataNested[0].values, runoffDataNested[0].values, changeInStorageDataNested[0].values);
 
         //create features group for each data group
         var features = svg.selectAll('features')
@@ -1768,7 +1786,9 @@ require([
 
                 var annualTotalDataMax = d3.max(annualTotalData.values, function(d) {return d.value;});
 
-                return [0, annualTotalDataMax];
+                var annualTotalDataMin = d3.min(annualTotalData.values, function(d) {return d.value;});
+
+                return [annualTotalDataMin, annualTotalDataMax];
             }
 
             var getYScaleDomainForMonthlyNormals = function(){
@@ -1778,7 +1798,9 @@ require([
 
                 var monthlyNormalsDataMax = d3.max(chartDataByLayerType.values, function(d) {return d.normalizedValue;});
 
-                return [0, monthlyNormalsDataMax];
+                var monthlyNormalsDataMin = d3.min(chartDataByLayerType.values, function(d) {return d.normalizedValue;});
+
+                return [monthlyNormalsDataMin, monthlyNormalsDataMax];
             }
 
             if(dataLayerType === "Precipitation" || dataLayerType === "Evapotranspiration" || dataLayerType === "Runoff" ){
@@ -1795,6 +1817,20 @@ require([
                     );
                 }
             } 
+            else if(dataLayerType === "ChangeInStorage") {
+
+                if(monthSelectValue === "Annual"){
+                    yScale.domain(getYScaleDomainForAnnualTotal());
+                } 
+                else if(monthSelectValue === "MonthlyNormals"){
+                    yScale.domain(getYScaleDomainForMonthlyNormals());
+                }
+                else {
+                    yScale.domain(
+                        [d3.min(changeInStorageData.values, function(d) {return d.value;}), d3.max(changeInStorageData.values, function(d) {return d.value;})]
+                    );
+                }
+            }
             else if(dataLayerType === "Snowpack" || dataLayerType === "Soil Moisture") {
 
                 if(monthSelectValue === "Annual"){
@@ -1907,15 +1943,18 @@ require([
 
         switch(key){
             case "Precipitation":
-                color = "#476C9B" 
+                color = "#3066BE" 
                 break;
             case "Evapotranspiration":
                 color = "#984447" 
                 break;
             case "Runoff":
-                color = "#ADD9F4"
+                color = "#782057"
                 break;
             case "Added to Storage":
+                color = "#468C98"
+                break;
+            case "ChangeInStorage":
                 color = "#468C98"
                 break;
             case "Snowpack":
