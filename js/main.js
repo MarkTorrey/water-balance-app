@@ -1779,6 +1779,12 @@ require([
 
             var getYScaleDomainForSummarizedValues = function(){
 
+                var yScaleDomain;
+
+                var yScaleDomainForMonthlyValues;
+
+                var keyName = (monthSelectValue === "Annual") ? "value" : "normalizedValue";
+
                 var chartDataByLayerType = chartData.filter(function(d){
                     return d.key === dataLayerType;
                 })[0];
@@ -1787,27 +1793,40 @@ require([
                     return d.key === "Annual";
                 })[0];
 
-                var keyName = (monthSelectValue === "Annual") ? "value" : "normalizedValue";
+                var monthlyData = chartDataByLayerType.values.filter(function(d){
+                    return d.key !== "Annual";
+                });
+                
+                var maxForYScale = d3.max( (monthSelectValue === "Annual") ? annualTotalData.values : monthlyData, function(d) {return d[keyName];});
 
-                var maxForYScale = d3.max( (monthSelectValue === "Annual") ? annualTotalData.values : chartDataByLayerType.values, function(d) {return d[keyName];});
+                var minForYScale = d3.min( (monthSelectValue === "Annual") ? annualTotalData.values : monthlyData, function(d) {return d[keyName];});
 
-                var minForYScale = d3.min( (monthSelectValue === "Annual") ? annualTotalData.values : chartDataByLayerType.values, function(d) {return d[keyName];});
+                if(monthSelectValue === "Annual"){
 
-                return [minForYScale, maxForYScale];
+                    yScaleDomainForMonthlyValues = getYScaleDomainForMonthlyValues();
+
+                    yScaleDomainForMonthlyValues = yScaleDomainForMonthlyValues.concat([minForYScale, maxForYScale]);
+
+                    yScaleDomain = [d3.min(yScaleDomainForMonthlyValues), d3.max(yScaleDomainForMonthlyValues)];
+
+                } else {
+                    yScaleDomain = [minForYScale, maxForYScale];
+                }
+                
+                return yScaleDomain;
             }
 
             var getYScaleDomainForMonthlyValues = function(){
 
                 var chartDataByLayerType = data.filter(function(d){
                     return d.key === dataLayerType;
-                });
+                })[0];
 
-                var maxForYScale = d3.max( chartDataByLayerType[0].values, function(d) {return d.value;});
+                var maxForYScale = d3.max( chartDataByLayerType.values, function(d) {return d.value;});
 
-                var minForYScale = d3.min( chartDataByLayerType[0].values, function(d) {return d.value;});
+                var minForYScale = d3.min( chartDataByLayerType.values, function(d) {return d.value;});
 
                 return [minForYScale, maxForYScale];              
-
             }
 
             if(monthSelectValue === "Annual" || monthSelectValue === "MonthlyNormals"){
