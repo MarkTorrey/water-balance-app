@@ -282,7 +282,7 @@ require([
         imageServiceIdentifyTaskParams.returnCatalogItems = true;
         imageServiceIdentifyTaskParams.returnGeometry = false;
         imageServiceIdentifyTaskParams.geometry = inputGeometry;
-        imageServiceIdentifyTaskParams.timeExtent = getTimeExtent(app.stdTimeInfo[0], app.stdTimeInfo[app.stdTimeInfo.length - 1]);
+        // imageServiceIdentifyTaskParams.timeExtent = getTimeExtent(app.stdTimeInfo[0], app.stdTimeInfo[app.stdTimeInfo.length - 1]);
         imageServiceIdentifyTaskParams.mosaicRule = getMosaicRule(imageServiceTitle);
 
         imageServiceIdentifyTask.execute(imageServiceIdentifyTaskParams).then(function(response) {
@@ -394,7 +394,7 @@ require([
         var startTime = convertUnixValueToTime(app.stdTimeInfo[app.stdTimeInfo.length - 1]);
         var endTime = getEndTimeValue(startTime);
 
-        setZExtentForImageLayer(visibleLayer);
+        // setZExtentForImageLayer(visibleLayer);
 
         updateMapTimeInfo(startTime, endTime);
     }
@@ -470,7 +470,7 @@ require([
         var formatedTimeUnit;
 
         timeInterval = timeInterval || 1;
-        formatedTimeUnit = formatedTimeUnit || "months";
+        formatedTimeUnit = formatedTimeUnit || "days";
 
         return new Date(moment(startTime).add(timeInterval, formatedTimeUnit).format());
     }
