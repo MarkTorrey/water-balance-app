@@ -418,21 +418,21 @@ require([
         }
     }
 
-    function setZExtentForImageLayer(layer){
-        var mr = new MosaicRule({
-            "method" : "esriMosaicNone",
-            "ascending" : true,
-            "operation" : "MT_SUM"
-        });
-        mr.multidimensionalDefinition = [];
-        mr.multidimensionalDefinition.push(new DimensionalDefinition({
-            variableName: "",
-            dimensionName: "StdZ",
-            values: [[-2, 0]]
-        }));
+    // function setZExtentForImageLayer(layer){
+    //     var mr = new MosaicRule({
+    //         "method" : "esriMosaicNone",
+    //         "ascending" : true,
+    //         "operation" : "MT_SUM"
+    //     });
+    //     mr.multidimensionalDefinition = [];
+    //     mr.multidimensionalDefinition.push(new DimensionalDefinition({
+    //         variableName: "",
+    //         dimensionName: "StdZ",
+    //         values: [[-2, 0]]
+    //     }));
 
-        layer.layerObject.setMosaicRule(mr);
-    }
+    //     layer.layerObject.setMosaicRule(mr);
+    // }
 
     function getWebMapLayerByVisibility(){
         var visibleLayers = app.webMapItems.operationalLayers.filter(function(d){
@@ -596,8 +596,6 @@ require([
 
             domain.push(lowest, Math.ceil(highest));
 
-            // console.log("domain for", key, domain);
-
             return domain;
         }
 
@@ -677,8 +675,8 @@ require([
             })
             .y(function(d) {
                 return yScale(d.value);
-            });
-            // .interpolate("step-after"); //interpolate the straight lines into curve lines
+            })
+            .interpolate("cardinal"); //interpolate the straight lines into curve lines
 
         var barWidth = Math.floor((width/precipData[0].values.length) * 0.8);
 
@@ -745,7 +743,6 @@ require([
         var areaChartLayers = stack(nest.entries(areaChartData));
 
         var createArea = d3.svg.area()
-            // .interpolate("cardinal")
             .x(function(d) { return xScale(d.stdTime); })
             .y0(function(d) { return yScale(d.y0); })
             .y1(function(d) { return yScale(d.y0 + d.y); });
@@ -910,7 +907,7 @@ require([
                 app.monthlyTrendChart.highlightTrendLineByMonth(timeFormatFullMonthName(new Date(closestTimeValue)));
             } 
                 
-            getPieChartDataByTime(closestTimeValue);
+            getSummaryDataByTime(closestTimeValue);
 
             setTimeout(function(){
                 prevMouseXPosition = mousePositionX;
@@ -938,7 +935,7 @@ require([
 
             setHighlightRefLineByTime(time);
             
-            getPieChartDataByTime(time);
+            getSummaryDataByTime(time);
         }
 
         function setHighlightRefLineByTime(time){
@@ -979,7 +976,7 @@ require([
             return chartData;
         }
 
-        function getPieChartDataByTime(time){
+        function getSummaryDataByTime(time){
 
             var precipAndEvapoData = getChartDataByTime(time);
 
@@ -1012,11 +1009,11 @@ require([
 
             // $(".pie-chart-title-text").text(formatedTime);
 
-            if(!app.pieChart){
-                createPieChart(pieChartData);
-            } else {
-                updatePieChart(pieChartData);
-            }
+            // if(!app.pieChart){
+            //     createPieChart(pieChartData);
+            // } else {
+            //     updatePieChart(pieChartData);
+            // }
         }
         
         this.toggleChartViews = function(){
@@ -1176,172 +1173,172 @@ require([
 
     }
 
-    function createPieChart(data){
+    // function createPieChart(data){
         
-        var containerID = ".pie-chart-div";
-        var container = $(containerID);
+    //     var containerID = ".pie-chart-div";
+    //     var container = $(containerID);
 
-        // Set the dimensions of the canvas / graph
-        var width = container.width();
-        var height = container.height();
-        var radius = Math.min(width, height) / 2;
+    //     // Set the dimensions of the canvas / graph
+    //     var width = container.width();
+    //     var height = container.height();
+    //     var radius = Math.min(width, height) / 2;
 
-        // container.empty();
-        app.pieChart = new PieChart(containerID, width, height, radius, getPieChartData(data));
-    }
+    //     // container.empty();
+    //     app.pieChart = new PieChart(containerID, width, height, radius, getPieChartData(data));
+    // }
 
-    function updatePieChart(data){
-        app.pieChart.update(getPieChartData(data));
-    }
+    // function updatePieChart(data){
+    //     app.pieChart.update(getPieChartData(data));
+    // }
 
-    function getPieChartData(data){
+    // function getPieChartData(data){
 
-        var pieChartData = data.filter(function(d){
-            return d.value >= 0;
-        });
+    //     var pieChartData = data.filter(function(d){
+    //         return d.value >= 0;
+    //     });
 
-        if(pieChartData.length < 3){
-            //the value of surface changing storage is negtive, add a note to pie chart
-            var surfaceChangingStorageData = data.filter(function(d){
-                return d.key === "Added to Storage";
-            });
+    //     if(pieChartData.length < 3){
+    //         //the value of surface changing storage is negtive, add a note to pie chart
+    //         var surfaceChangingStorageData = data.filter(function(d){
+    //             return d.key === "Added to Storage";
+    //         });
 
-            $(".pie-chart-footnote-div").html("<span>" + Math.abs(surfaceChangingStorageData[0].value) + "mm lost from storage" + "</span>")
-        } else {
-            $(".pie-chart-footnote-div").html("");
-        }
+    //         $(".pie-chart-footnote-div").html("<span>" + Math.abs(surfaceChangingStorageData[0].value) + "mm lost from storage" + "</span>")
+    //     } else {
+    //         $(".pie-chart-footnote-div").html("");
+    //     }
 
-        return pieChartData;
-    }
+    //     return pieChartData;
+    // }
 
-    function PieChart(chartContainerID, width, height, radius, dataset){
+    // function PieChart(chartContainerID, width, height, radius, dataset){
         
-        this.width = width;
-        this.height = height;
-        this.radius = radius;
+    //     this.width = width;
+    //     this.height = height;
+    //     this.radius = radius;
 
-        var enterAntiClockwise = {
-            startAngle: Math.PI * 2,
-            endAngle: Math.PI * 2
-        };
+    //     var enterAntiClockwise = {
+    //         startAngle: Math.PI * 2,
+    //         endAngle: Math.PI * 2
+    //     };
 
-        // var tooltip = d3.select("body").append("div").attr("class", "pie-chart-tooltip");
+    //     // var tooltip = d3.select("body").append("div").attr("class", "pie-chart-tooltip");
 
-        var svg = d3.select(chartContainerID).append("svg")
-            .attr("width", this.width)
-            .attr("height", this.height)
-            .attr("classs", "pie-chart-svg")
-            .append("g")
-            .attr("transform", "translate(" + this.width / 2 + "," + this.height / 2 + ")");
+    //     var svg = d3.select(chartContainerID).append("svg")
+    //         .attr("width", this.width)
+    //         .attr("height", this.height)
+    //         .attr("classs", "pie-chart-svg")
+    //         .append("g")
+    //         .attr("transform", "translate(" + this.width / 2 + "," + this.height / 2 + ")");
 
-        var pieChartLabelText = svg.append("text")
-            .attr("text-anchor", "middle")
-            .attr("x", 0)
-            .attr("y", 0)
-            .style("font-size", "12")
-            .style("fill", "#505050");
+    //     var pieChartLabelText = svg.append("text")
+    //         .attr("text-anchor", "middle")
+    //         .attr("x", 0)
+    //         .attr("y", 0)
+    //         .style("font-size", "12")
+    //         .style("fill", "#505050");
 
-        var arc = d3.svg.arc()
-            // .outerRadius(this.radius);
-            .outerRadius(this.radius)
-            .innerRadius(this.radius - 25);
+    //     var arc = d3.svg.arc()
+    //         // .outerRadius(this.radius);
+    //         .outerRadius(this.radius)
+    //         .innerRadius(this.radius - 25);
 
-        var pie = d3.layout.pie()
-            .sort(null)
-            .value(function(d){ return d.value; });
+    //     var pie = d3.layout.pie()
+    //         .sort(null)
+    //         .value(function(d){ return d.value; });
         
-        var path = svg.selectAll("path")
-            .data(pie([]))
-            .enter().append("path")
-            .attr("class", "arc")
-            .attr("fill", function(d, i) { 
-                return getColorByKey(d.data.key); 
-            })
-            .attr("d", arc)
-            .each(function(d) { 
-                // store the initial values
-                this._current = d; 
-            });
+    //     var path = svg.selectAll("path")
+    //         .data(pie([]))
+    //         .enter().append("path")
+    //         .attr("class", "arc")
+    //         .attr("fill", function(d, i) { 
+    //             return getColorByKey(d.data.key); 
+    //         })
+    //         .attr("d", arc)
+    //         .each(function(d) { 
+    //             // store the initial values
+    //             this._current = d; 
+    //         });
         
-        this.update = function(data){
+    //     this.update = function(data){
 
-            path = path.data(pie(data));
+    //         path = path.data(pie(data));
 
-            path.enter().append("path")
-                .attr("class", "arc")
-                // .attr("fill", function (d, i) {
-                //     return d.data.color;
-                // })
-                .attr("d", arc(enterAntiClockwise))
-                .each(function (d) {
-                    this._current = {
-                        data: d.data,
-                        value: d.value,
-                        pct: d.pct,
-                        startAngle: enterAntiClockwise.startAngle,
-                        endAngle: enterAntiClockwise.endAngle
-                    };
-                }); // store the initial values
+    //         path.enter().append("path")
+    //             .attr("class", "arc")
+    //             // .attr("fill", function (d, i) {
+    //             //     return d.data.color;
+    //             // })
+    //             .attr("d", arc(enterAntiClockwise))
+    //             .each(function (d) {
+    //                 this._current = {
+    //                     data: d.data,
+    //                     value: d.value,
+    //                     pct: d.pct,
+    //                     startAngle: enterAntiClockwise.startAngle,
+    //                     endAngle: enterAntiClockwise.endAngle
+    //                 };
+    //             }); // store the initial values
 
-            path.exit()
-                .transition()
-                .duration(250)
-                .attrTween('d', this.arcTweenOut)
-                .remove(); // now remove the exiting arcs
+    //         path.exit()
+    //             .transition()
+    //             .duration(250)
+    //             .attrTween('d', this.arcTweenOut)
+    //             .remove(); // now remove the exiting arcs
 
-            path.transition().duration(250).attrTween("d", this.arcTween); // redraw the arcs
-        }
+    //         path.transition().duration(250).attrTween("d", this.arcTween); // redraw the arcs
+    //     }
 
-        this.arcTween = function(a) {
-            var i = d3.interpolate(this._current, a);
-            this._current = i(0);
+    //     this.arcTween = function(a) {
+    //         var i = d3.interpolate(this._current, a);
+    //         this._current = i(0);
 
-            d3.select(this)
-                .attr("fill", getColorByKey(this._current.data.key))
-                .on("mouseover", function(d){
+    //         d3.select(this)
+    //             .attr("fill", getColorByKey(this._current.data.key))
+    //             .on("mouseover", function(d){
 
-                    d3.selectAll(".arc").each(function(item){
-                        var arcElement = d3.select(this).node();
-                        if(item.data.key === d.data.key){
-                            d3.select(arcElement).style("opacity", 1);
-                        } else {
-                            d3.select(arcElement).style("opacity", 0.6);
-                        }
-                    });
+    //                 d3.selectAll(".arc").each(function(item){
+    //                     var arcElement = d3.select(this).node();
+    //                     if(item.data.key === d.data.key){
+    //                         d3.select(arcElement).style("opacity", 1);
+    //                     } else {
+    //                         d3.select(arcElement).style("opacity", 0.6);
+    //                     }
+    //                 });
 
-                    pieChartLabelText.selectAll("tspan").remove();
+    //                 pieChartLabelText.selectAll("tspan").remove();
 
-                    var labelTextForDataKey = pieChartLabelText.append("tspan")
-                        .attr("dy", 0)
-                        .attr("x",0)
-                        .text(this._current.data.key);
+    //                 var labelTextForDataKey = pieChartLabelText.append("tspan")
+    //                     .attr("dy", 0)
+    //                     .attr("x",0)
+    //                     .text(this._current.data.key);
 
-                    var labelTextForDataValue = pieChartLabelText.append("tspan")
-                        .attr("dy", "1.2em") // offest by 1.2 em
-                        .attr("x",0)
-                        .text(d.data.value + " mm " + "(" + this._current.data.pct.toString().split(".")[0] + "%)");
-                })
-                .on("mouseout", function(d){
-                    d3.selectAll(".arc").style("opacity", 1);
+    //                 var labelTextForDataValue = pieChartLabelText.append("tspan")
+    //                     .attr("dy", "1.2em") // offest by 1.2 em
+    //                     .attr("x",0)
+    //                     .text(d.data.value + " mm " + "(" + this._current.data.pct.toString().split(".")[0] + "%)");
+    //             })
+    //             .on("mouseout", function(d){
+    //                 d3.selectAll(".arc").style("opacity", 1);
 
-                    pieChartLabelText.text("");
-                });
+    //                 pieChartLabelText.text("");
+    //             });
 
-            return function(t) {
-                return arc(i(t));
-            };
-        }
+    //         return function(t) {
+    //             return arc(i(t));
+    //         };
+    //     }
 
-        this.arcTweenOut = function(a) {
-            var i = d3.interpolate(this._current, {startAngle: Math.PI * 2, endAngle: Math.PI * 2, value: 0});
-            this._current = i(0);
-            return function (t) {
-                return arc(i(t));
-            };
-        }
+    //     this.arcTweenOut = function(a) {
+    //         var i = d3.interpolate(this._current, {startAngle: Math.PI * 2, endAngle: Math.PI * 2, value: 0});
+    //         this._current = i(0);
+    //         return function (t) {
+    //             return arc(i(t));
+    //         };
+    //     }
 
-        this.update(dataset);
-    }
+    //     this.update(dataset);
+    // }
 
     function MonthlyTrendChart(data){
 
@@ -1553,7 +1550,7 @@ require([
             .y(function(d) {
                 return yScale(+d.value);
             })
-            .interpolate("monotone");
+            .interpolate("cardinal");
 
         var createLineForMonthlyNormals = d3.svg.line()
             .x(function(d) {
@@ -1562,7 +1559,7 @@ require([
             .y(function(d) {
                 return yScale(+d.normalizedValue);
             })
-            .interpolate("monotone");
+            .interpolate("cardinal");
 
         var precipDataNested = chartData.filter(function(d){
             return d.key === "Precipitation";
