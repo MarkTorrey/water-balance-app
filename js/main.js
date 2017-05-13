@@ -518,25 +518,6 @@ require([
         }
     }
 
-    // function signInToArcGISPortal(){
-
-    //     var info = new OAuthInfo({
-    //         appId: appConfig.appID,
-    //         popup: false
-    //     });    
-    //     esriId.registerOAuthInfos([info]);   
-        
-    //     new arcgisPortal.Portal(info.portalUrl).signIn()
-    //     .then(function(){
-    //         console.log('you are logged in');
-    //     })     
-    //     .otherwise(
-    //         function (error){
-    //             console.log("Error occurred while signing in: ", error);
-    //         }
-    //     );    
-    // }
-
     function MainChart(data){
 
         var containerID = ".line-chart-div";
@@ -978,42 +959,60 @@ require([
 
         function getSummaryDataByTime(time){
 
-            var precipAndEvapoData = getChartDataByTime(time);
+            var inputTime = new Date(time);
 
-            var runoffDataByTime = getChartDataByTime(time, [app.runoffData]);
+            var summaryDataByTime = getChartDataByTime(time);
 
-            var precipDataByTime = precipAndEvapoData.filter(function(d){
+            var precipDataByTime = summaryDataByTime.filter(function(d){
                 return d.key === "Precipitation";
             });
 
-            var evapoDataByTime = precipAndEvapoData.filter(function(d){
+            var evapoDataByTime = summaryDataByTime.filter(function(d){
                 return d.key === "Evapotranspiration";
             });
 
-            var surfaceChangingStorageData = {
-                "key": "Added to Storage",
-                "value": precipDataByTime[0].value - evapoDataByTime[0].value - runoffDataByTime[0].value
-            };
-
-            var pieChartData = runoffDataByTime.concat(evapoDataByTime, [surfaceChangingStorageData]);
-
-            // console.log(precipData[0].value);
-
-            pieChartData.forEach(function(d){
-                d.pct = (d.value / precipDataByTime[0].value * 100).toFixed(0);
+            var runoffDataByTime = summaryDataByTime.filter(function(d){
+                return d.key === "Runoff";
             });
 
-            var formatedTime = timeFormatWithMonth(new Date(time));
+            var soildMoistureDataByTime = summaryDataByTime.filter(function(d){
+                return d.key === "Soil Moisture";
+            });
 
-            $(".pie-chart-title-text").text("Water Balance - " + formatedTime);
+            var snowpackDataByTime = summaryDataByTime.filter(function(d){
+                return d.key === "Snowpack";
+            });
 
-            // $(".pie-chart-title-text").text(formatedTime);
+            var changeInStorageDataByTime = summaryDataByTime.filter(function(d){
+                return d.key === "ChangeInStorage";
+            });
 
-            // if(!app.pieChart){
-            //     createPieChart(pieChartData);
-            // } else {
-            //     updatePieChart(pieChartData);
-            // }
+            var changeInStorageData = app.monthlyTrendChart.getChangeInStorageDataByMonth(timeFormatFullMonthName(inputTime));
+
+            $(".summary-info-title-text").text(timeFormatWithMonth(inputTime));
+
+            $("span.precip-value").text(precipDataByTime[0].value);
+
+            $("span.runoff-value").text(runoffDataByTime[0].value);
+
+            $("span.evapo-value").text(evapoDataByTime[0].value);
+
+            $("span.soilmoisture-value").text(soildMoistureDataByTime[0].value);
+
+            $("span.snowpack-value").text(snowpackDataByTime[0].value);
+
+            
+
+            console.log(changeInStorageData);
+
+
+            // console.log("Water Balance - " + formatedTime);
+
+            // console.log(pieChartData);
+
+            // $(".summary-info-title-text").text("Water Balance - " + formatedTime);
+
+            
         }
         
         this.toggleChartViews = function(){
@@ -1614,7 +1613,7 @@ require([
             .attr('class', 'features-for-monthly-normals');
             
         //append the line graphic
-        var linesForMonthluNormals = featuresForMonthluNormals.append('path')
+        var linesForMonthlyNormal = featuresForMonthluNormals.append('path')
             .attr('class', 'monthly-normal-trend-line')
             .attr('d', function(d){
                 // console.log(d);
@@ -1839,7 +1838,7 @@ require([
                 return createLine(d.values);
             });
 
-            linesForMonthluNormals.transition().duration(1000).attr('d', function(d){
+            linesForMonthlyNormal.transition().duration(1000).attr('d', function(d){
                 return createLineForMonthlyNormals(getMonthlyNormalsData(d));
             });
         }
@@ -1871,7 +1870,7 @@ require([
                 return createLine(d.values);
             });
 
-            linesForMonthluNormals.attr('d', function(d){
+            linesForMonthlyNormal.attr('d', function(d){
                 return createLineForMonthlyNormals(getMonthlyNormalsData(d));
             })
 
@@ -1887,8 +1886,8 @@ require([
             lines.style("opacity", 0);
             lines.style("stroke-width", 1);
 
-            linesForMonthluNormals.style("opacity", 0);
-            linesForMonthluNormals.style("stroke-width", 1);
+            linesForMonthlyNormal.style("opacity", 0);
+            linesForMonthlyNormal.style("stroke-width", 1);
 
             xAxisG.style("opacity", 0);
             xAxisGForMonthlyNormals.style("opacity", 0);
@@ -1911,7 +1910,7 @@ require([
 
                 $(".month-select").val(month);
             } else {
-                linesForMonthluNormals.each(function(d){
+                linesForMonthlyNormal.each(function(d){
                     var lineElement = d3.select(this).node();
 
                     if(d.key === dataLayerType){
@@ -1921,6 +1920,11 @@ require([
                 });
                 xAxisGForMonthlyNormals.style("opacity", 1);
             }            
+        }
+
+        this.getChangeInStorageDataByMonth = function(fullMonthName){
+            console.log(fullMonthName);
+            return changeInStorageDataNested;
         }
 
         // this.updateChartScale();
@@ -1939,9 +1943,6 @@ require([
                 break;
             case "Runoff":
                 color = "#782057"
-                break;
-            case "Added to Storage":
-                color = "#129876"
                 break;
             case "ChangeInStorage":
                 color = "#129876"

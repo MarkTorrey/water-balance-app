@@ -77,36 +77,48 @@
     </div>
 
     <div class="bottom-pane">
-        <div class="left pie-chart-wrapper">
+        <div class="left summary-info-wrapper">
 
-            <div class="pie-chart-title-div">
-                <span class="pie-chart-title-text"></span>
+            <div class="summary-info-title-div row">
+                <span class="summary-info-title-text"></span>
             </div>
 
-            <div class="pie-chart-div">
-                <!--<div class="pie-chart-number">123456 mm</div>-->
+            <div class="summary-table-wrapper row">
+                <div><span class="left">precipitation</span><span class="precip-value with-unit right">200</span></div>
+                <div><span class="left">runoff</span><span class="runoff-value with-unit right">12</span></div>
+                <div><span class="left">evapotranspiration</span><span class="evapo-value with-unit right">100</span></div>
+                <div><span class="left">soil moisture</span><span class="soilmoisture-value with-unit right">52</span></div>
+                <div><span class="left">snowpack</span><span class="snowpack-value with-unit right">0</span></div>
+            </div>
+
+            <div class="summary-desc-text-div row">
+                <span>17 mm of water was added to storage this month. Total soil moisture is now 20% above average for February.</span>
+            </div>
+
+            <div class="scale-chart-wrapper row">
+                <div class="scale-chart-label">
+                    <span class="left">depletion</span>
+                    <span class="right">recharge</span>
+                </div>
+                <div class="scale-chart-rect">
+                    <div class="scale-chart-tooltip">
+                        <div class="scale-chart-tooltip-line"></div>
+                        <div class="scale-chart-tooltip-text"><span class="with-unit">20</span></div>
+                    </div>
+                </div>
+            </div>
+
+
+
+
+
+            <!--<div class="pie-chart-div">
             </div>
 
             <div class="pie-chart-bottom-div">
-
                 <div class="pie-chart-footnote-div"></div>
+            </div>-->
 
-                <!--<div class="pie-chart-legend-div">
-                    <div>
-                        <span style="background-color: #984447;" class="legend-icon"></span>
-                        <span class="legend-text">Evapotranspiration</span>
-                    </div>
-                    <div>
-                        <span style="background-color: #ADD9F4;" class="legend-icon"></span>
-                        <span class="legend-text">Runoff</span>
-                    </div>
-                    <div>
-                        <span style="background-color: #468C98;" class="legend-icon"></span>
-                        <span class="legend-text">Added to Storage</span>
-                    </div>
-                </div>-->
-                
-            </div>
         </div>
 
         <div class="middle line-chart-wrapper">
