@@ -255,7 +255,7 @@ div.summary-info-wrapper > div.summary-table-wrapper > div {
 }
 
 div.summary-info-wrapper > div.summary-desc-text-div {
-
+    margin-top: 25px;
 }
 
 div.summary-info-wrapper > div.scale-chart-wrapper {
@@ -281,7 +281,6 @@ div.scale-chart-rect > div.scale-chart-tooltip {
     position: relative;
     width: 50px;
     height: 200%;
-    margin-left: 50%;
 }
 
 div.scale-chart-tooltip > div.scale-chart-tooltip-line {

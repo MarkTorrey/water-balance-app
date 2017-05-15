@@ -961,6 +961,10 @@ require([
 
             var inputTime = new Date(time);
 
+            var formatedTimeValue = timeFormatWithMonth(inputTime);
+
+            var fullMonthName = timeFormatFullMonthName(inputTime);
+
             var summaryDataByTime = getChartDataByTime(time);
 
             var precipDataByTime = summaryDataByTime.filter(function(d){
@@ -987,10 +991,11 @@ require([
                 return d.key === "ChangeInStorage";
             });
 
-            var changeInStorageData = app.monthlyTrendChart.getChangeInStorageDataByMonth(timeFormatFullMonthName(inputTime));
+            var changeInStorageData = app.monthlyTrendChart.getChangeInStorageDataByMonth(fullMonthName);
 
-            $(".summary-info-title-text").text(timeFormatWithMonth(inputTime));
+            $(".summary-info-title-text").text(formatedTimeValue);
 
+            //update the summary table values            
             $("span.precip-value").text(precipDataByTime[0].value);
 
             $("span.runoff-value").text(runoffDataByTime[0].value);
@@ -1001,18 +1006,91 @@ require([
 
             $("span.snowpack-value").text(snowpackDataByTime[0].value);
 
+            //update the scale chart tooltip position
+            setScaleChartTooltipPosition(changeInStorageDataByTime[0].value, changeInStorageData.values);
+
+            setSummaryDescTextValue(changeInStorageDataByTime[0].value, soildMoistureDataByTime[0].value, fullMonthName);
             
+        }
 
-            console.log(changeInStorageData);
+        function setScaleChartTooltipPosition(changeInStorageValue, arrOfValues){
 
+            var absMaxValue = d3.max(arrOfValues, function(d){
+                return Math.abs(d.value);
+            });
 
-            // console.log("Water Balance - " + formatedTime);
+            var ratioToAbsMaxValue = changeInStorageValue / (absMaxValue * 1.05);
 
-            // console.log(pieChartData);
+            var scaleChartWidthHalf = $(".scale-chart-rect").width() / 2;
 
-            // $(".summary-info-title-text").text("Water Balance - " + formatedTime);
+            var tooltipDivWidthHalf = $(".scale-chart-tooltip").width() / 2;
 
-            
+            var tooltipAbsolutePosition = (ratioToAbsMaxValue >= 0) ? 
+                                          (scaleChartWidthHalf + (scaleChartWidthHalf * ratioToAbsMaxValue)) - tooltipDivWidthHalf : 
+                                          (scaleChartWidthHalf * (1 + ratioToAbsMaxValue)) - tooltipDivWidthHalf; 
+
+            //update the value of the scale chart tooltip
+            $(".scale-chart-tooltip-text > span").text(changeInStorageValue);
+
+            //update the position of scale chart tooltip
+            $(".scale-chart-tooltip").css("margin-left", tooltipAbsolutePosition + "px");
+        }
+
+        function setSummaryDescTextValue(changeInStorageValue, soilmoistureValue, monthName){
+
+            // 17 mm of water was added to storage this month. Total soil moisture is now 20% above average for February. 
+            // 5 mm of water was lost from storage this month. Total soil moisture is still 20% above average for February. 
+            // 2 mm of water was added to storage this month. Total soil moisture is still 12% below average for February.
+            // 22 mm of water was lost from storage this month. Total soil moisture is now 12% below average for February.
+
+            var absValueOfChangeInStorage = Math.abs(changeInStorageValue);
+            var addedOrLost = (changeInStorageValue >= 0) ? "added to" : "lost from";
+
+            var soilMoistureData = app.monthlyTrendChart.getSoilMoistureDataByMonth(monthName);
+            var arrayOfSoilMoistureValues = soilMoistureData.values.map(function(d){
+                return d.value;
+            });
+            var avgOfSoilMoistureValues = average(arrayOfSoilMoistureValues);
+            var stdDevOfSoilMoistureValues = standardDeviation(arrayOfSoilMoistureValues);
+            var pctSoilMoistureFromAve = round(((soilmoistureValue - avgOfSoilMoistureValues) / avgOfSoilMoistureValues) * 100, 0);
+
+            var soilMoisturePctText = Math.abs(pctSoilMoistureFromAve) + "%" + ((pctSoilMoistureFromAve >= 0) ? " above": " below");
+
+            var isSoilMoistureAboveNormal;
+
+            if(pctSoilMoistureFromAve >= 0){
+                if(avgOfSoilMoistureValues + stdDevOfSoilMoistureValues > soilmoistureValue){
+                    isSoilMoistureAboveNormal = "now";
+                } else {
+                    isSoilMoistureAboveNormal = "still";
+                }
+            } else {
+                if(avgOfSoilMoistureValues - stdDevOfSoilMoistureValues < soilmoistureValue){
+                    isSoilMoistureAboveNormal = "now";
+                } else {
+                    isSoilMoistureAboveNormal = "still";
+                }
+            }
+
+            var descTextElements = [ 
+                absValueOfChangeInStorage + "mm",
+                "of water was",
+                addedOrLost,
+                "storage this month."
+            ];
+
+            var descTextElements1 = [
+                "Total soil moisture is",
+                isSoilMoistureAboveNormal,
+                soilMoisturePctText,
+                "average for",
+                monthName + "."
+            ];
+
+            var descText = descTextElements.join(" ") + " " + descTextElements1.join(" ");
+
+            $(".summary-desc-text-div > span").text(descText);
+
         }
         
         this.toggleChartViews = function(){
@@ -1923,8 +2001,21 @@ require([
         }
 
         this.getChangeInStorageDataByMonth = function(fullMonthName){
-            console.log(fullMonthName);
-            return changeInStorageDataNested;
+
+            var changeInStorageDataByMonth = changeInStorageDataNested[0].values.filter(function(d){
+                return d.key === fullMonthName;
+            });
+
+            return changeInStorageDataByMonth[0];
+        }
+
+        this.getSoilMoistureDataByMonth = function(fullMonthName){
+
+            var soilMoistureDataByMonth = soilMoistureDataNested[0].values.filter(function(d){
+                return d.key === fullMonthName;
+            });
+
+            return soilMoistureDataByMonth[0];
         }
 
         // this.updateChartScale();
@@ -1959,6 +2050,30 @@ require([
 
     function round(value, decimals) {
         return Number(Math.round(value+'e'+decimals)+'e-'+decimals);
+    }
+
+    function standardDeviation(values){
+        var avg = average(values);
+        
+        var squareDiffs = values.map(function(value){
+            var diff = value - avg;
+            var sqrDiff = diff * diff;
+            return sqrDiff;
+        });
+        
+        var avgSquareDiff = average(squareDiffs);
+
+        var stdDev = Math.sqrt(avgSquareDiff);
+        return stdDev;
+    }
+
+    function average(data){
+        var sum = data.reduce(function(sum, value){
+            return sum + value;
+        }, 0);
+
+        var avg = sum / data.length;
+        return avg;
     }
 
 
