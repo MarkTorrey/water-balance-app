@@ -171,8 +171,8 @@ div.search-input-wrapper > div {
 }*/
 
 .map-layer-select-wrapper {
-    height: 50px;
-    width: 250px;
+    height: 40px;
+    width: 200px;
     background-color: #efefef;
     top: 65px;
     right: 15px;
@@ -182,11 +182,15 @@ div.search-input-wrapper > div {
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
 }
 
-/*.map-layer-select-wrapper > select {
-    background: #efefef;
-}*/
+.map-layer-select-wrapper > select {
+    background-color: #efefef;
+    /*background: #efefef;*/
+    border: 0px solid #a9a9a9;
+    box-shadow: none;
+    font-weight: 600;
+}
 
-.layer-control-wrapper > div {
+/*.layer-control-wrapper > div {
     width: 50%;
     height: 100%;
     padding: 8px;
@@ -201,7 +205,7 @@ div.search-input-wrapper > div {
 .layer-control-wrapper > div.active {
     background-color: #0079c1;
     color: #fff;
-}
+}*/
 
 .bottom-pane {
     position: absolute;

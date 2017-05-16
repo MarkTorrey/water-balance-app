@@ -823,7 +823,7 @@ require([
                 var isElementVisible = $(".legend-wrapper[value='"+d.key+"']").is(':visible');
 
                 if(isElementVisible){
-                    tooltipContent += '<span style="color:' + textColor + '">' +  d.key + ': ' +  parseInt(d.value) + '</span><br>';
+                    tooltipContent += '<span class="with-unit" style="color:' + textColor + '">' +  d.key + ': ' +  parseInt(d.value) + '</span><br>';
                 }
             });    
             
@@ -1320,7 +1320,10 @@ require([
                     "value": value,
                     "year": year
                 };
-                annualTotalEntry.values.push(annualValObj)
+
+                if(annualValues[index].length >= 12){
+                    annualTotalEntry.values.push(annualValObj);
+                }
             });
 
             entries.push(annualTotalEntry)
