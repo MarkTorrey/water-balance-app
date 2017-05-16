@@ -795,7 +795,7 @@ require([
 
             var tooltipContent = '<b>' + timeFormatWithMonth(new Date(closestTimeValue)) + '</b><br>';
 
-            var tooltipX = (mousePositionX > prevMouseXPosition) ? d3.event.pageX - 160 : (d3.event.pageX + 160 < container.width()) ?  d3.event.pageX + 5 : d3.event.pageX - 160;
+            var tooltipX = (mousePositionX > prevMouseXPosition) ? d3.event.pageX - 175 : (d3.event.pageX + 175 < container.width()) ?  d3.event.pageX + 10 : d3.event.pageX - 175;
 
             var monthlySelectValue = $(".month-select").val();
 
@@ -962,25 +962,87 @@ require([
 
         function setScaleChartTooltipPosition(changeInStorageValue, arrOfValues){
 
-            var absMaxValue = d3.max(arrOfValues, function(d){
-                return Math.abs(d.value);
+            //update the value of the scale chart tooltip first, 
+            //as this will affect the width of div.scale-chart-tooltip-text element
+            $(".scale-chart-tooltip-text > span").text(changeInStorageValue);
+
+            var changeInStorageValues = arrOfValues.map(function(d){
+                return d.value;
             });
+
+            var absMaxValue = d3.max(changeInStorageValues, function(d){
+                return Math.abs(d);
+            });
+
+            var aveChangeInStorage = round(average(changeInStorageValues), 0);
 
             var ratioToAbsMaxValue = changeInStorageValue / (absMaxValue * 1.05);
 
-            var scaleChartWidthHalf = $(".scale-chart-rect").width() / 2;
+            var aveToAbsMaxValue = aveChangeInStorage / (absMaxValue * 1.05);
 
-            var tooltipDivWidthHalf = $(".scale-chart-tooltip").width() / 2;
+            $(".scale-chart-normal-value-text > span").text("Normal")
 
-            var tooltipAbsolutePosition = (ratioToAbsMaxValue >= 0) ? 
-                                          (scaleChartWidthHalf + (scaleChartWidthHalf * ratioToAbsMaxValue)) - tooltipDivWidthHalf : 
-                                          (scaleChartWidthHalf * (1 + ratioToAbsMaxValue)) - tooltipDivWidthHalf; 
+            // var scaleChartWidthHalf = $(".scale-chart-rect").width() / 2;
 
-            //update the value of the scale chart tooltip
-            $(".scale-chart-tooltip-text > span").text(changeInStorageValue);
+            // var tooltipDivWidthHalf = $(".scale-chart-tooltip").width() / 2;
 
+            // var tooltipAbsolutePosition = (ratioToAbsMaxValue >= 0) ? 
+            //                               (scaleChartWidthHalf + (scaleChartWidthHalf * ratioToAbsMaxValue)) - tooltipDivWidthHalf : 
+            //                               (scaleChartWidthHalf * (1 + ratioToAbsMaxValue)) - tooltipDivWidthHalf; 
+            
+            // //update the position of scale chart tooltip
+            // $(".scale-chart-tooltip").css("margin-left", tooltipAbsolutePosition + "px");
+
+            setFoobarPostion("scale-chart-rect", "scale-chart-tooltip", ratioToAbsMaxValue);
+
+            setFoobarPostion("scale-chart-rect", "scale-chart-normal-value-indicator", aveToAbsMaxValue)
+
+            // var tooltipTextWidth = $("div.scale-chart-tooltip-text").width();
+
+            // var tooltipTextLeftMargin = 0;
+
+            // if(ratioToAbsMaxValue >= 0){
+            //     tooltipTextLeftMargin = tooltipDivWidthHalf - tooltipTextWidth - 3;
+            // } else {
+            //     tooltipTextLeftMargin = tooltipDivWidthHalf + 3;
+            // }
+
+            // $("div.scale-chart-tooltip-text").css("margin-left", tooltipTextLeftMargin + "px");
+
+        }
+
+        function setFoobarPostion(containerElementClassName, floatingElementClassName, ratio){
+
+            var containerElement = $("." + containerElementClassName);
+
+            var floatingElement = $("." + floatingElementClassName);
+
+            var containerElementWidthHalf  = containerElement.width() / 2;
+
+            var floatingElementWidthHalf = floatingElement.width() / 2;
+
+            var leftMarginValue = (ratio >= 0) ? 
+                                  (containerElementWidthHalf + (containerElementWidthHalf * ratio)) - floatingElementWidthHalf : 
+                                  (containerElementWidthHalf * (1 + ratio)) - floatingElementWidthHalf; 
+            
             //update the position of scale chart tooltip
-            $(".scale-chart-tooltip").css("margin-left", tooltipAbsolutePosition + "px");
+            floatingElement.css("margin-left", leftMarginValue + "px");
+
+            if(floatingElementClassName === "scale-chart-tooltip"){
+                var tooltipTextWidth = $("div.scale-chart-tooltip-text").width();
+
+                var tooltipTextLeftMargin = 0;
+
+                if(ratio >= 0){
+                    tooltipTextLeftMargin = floatingElementWidthHalf - tooltipTextWidth - 3;
+                } else {
+                    tooltipTextLeftMargin = floatingElementWidthHalf + 3;
+                }
+
+                $("div.scale-chart-tooltip-text").css("margin-left", tooltipTextLeftMargin + "px");
+            }
+
+
         }
 
         function setSummaryDescTextValue(changeInStorageValue, soilmoistureValue, monthName){

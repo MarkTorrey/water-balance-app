@@ -293,14 +293,51 @@ div.scale-chart-label > span {
 }
 
 div.scale-chart-wrapper > div.scale-chart-rect {
+    position: relative;
     height: 20px;
     background: linear-gradient(to right, #b2182b 0%, #ef8a62 20%, #fddbc7 40%, #d1e5f0 60%, #67a9cf 80%, #2166ac 100%);
 }
 
+div.scale-chart-rect > div.scale-chart-normal-value-indicator {
+    position: absolute;
+    top: 17px;
+    left: 0;
+    width: 150px;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0);
+    display: inline-block;
+    text-align: center;
+    margin-left: -50px;
+    color: #129876;
+}
+
+div.scale-chart-normal-value-indicator > div.reference-line {
+    margin: 0 auto;
+    /*height: 100%;
+    width: 2px;
+    background-color: #129876;
+    opacity: 0.5;*/
+
+    width: 0; 
+    height: 0; 
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    
+    border-bottom: 5px solid #129876;
+}
+
+.scale-chart-normal-value-text > span {
+    font-weight: 600;
+}
+
 div.scale-chart-rect > div.scale-chart-tooltip {
-    position: relative;
-    width: 50px;
-    height: 200%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 90px;
+    height: 100%;
+    display: inline-block;
+    /*background-color: rgba(0, 0, 0, .3);*/
 }
 
 div.scale-chart-tooltip > div.scale-chart-tooltip-line {
@@ -315,7 +352,9 @@ div.scale-chart-tooltip > div.scale-chart-tooltip-text {
     bottom: 0;
     left: 0;
     text-align: center;
-    width: 100%;
+    width: auto;
+    /*background-color: rgba(255, 255, 255, 0.3);*/
+    margin-left: 10px;
 }
 
 .bottom-pane > div.monthly-trend-chart-wrapper {
@@ -494,7 +533,7 @@ div.tooltip {
     font: 12px sans-serif;	
     position: absolute;	
     text-align: left;	
-    width: 150px;	
+    width: 165px;	
     height: 50px;		
     padding: 5px;	
     background: rgba(250, 250, 250, 0.9);	
