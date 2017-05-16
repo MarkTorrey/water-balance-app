@@ -1134,12 +1134,13 @@ require([
 
                     //toggle precip bars or evapo lines
                     if(legendValue === "Precipitation"){
+                        var isRunoffLayerVisible = $(".legend-wrapper[value='Runoff']").is(':visible');
+                        visibleLineFeatureKey = (isRunoffLayerVisible) ? "Runoff" : "Evapotranspiration";
                         bars.style("opacity", ".8");
-                        visibleLineFeatureKey = "Runoff";
                         // lines.style("opacity", ".2");
                     } else if (legendValue === "Runoff" || legendValue === "Evapotranspiration"){
-                        bars.style("opacity", ".2");
                         visibleLineFeatureKey = legendValue;
+                        bars.style("opacity", ".2");
                         // lines.style("opacity", ".8");
                     }
 
@@ -1453,7 +1454,7 @@ require([
             .y(function(d) {
                 return yScale(+d.value);
             })
-            .interpolate("cardinal");
+            .interpolate("monotone");
 
         var createLineForMonthlyNormals = d3.svg.line()
             .x(function(d) {
@@ -1462,7 +1463,7 @@ require([
             .y(function(d) {
                 return yScale(+d.normalizedValue);
             })
-            .interpolate("cardinal");
+            .interpolate("monotone");
 
         var precipDataNested = chartData.filter(function(d){
             return d.key === "Precipitation";

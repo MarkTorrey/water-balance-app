@@ -518,3 +518,8 @@ select {
     margin: auto;
     color: #505050;
 }
+
+.suggestionsMenu li {
+    margin: 0;
+    font-size: 11px;
+}
