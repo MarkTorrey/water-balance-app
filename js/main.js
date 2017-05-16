@@ -46,14 +46,6 @@ require([
         "appID": "T2NYnYffgXujL6DV"
     };
 
-    // var appConfig = {
-    //     // "webMapID": "00052bc317b3403babb8ddf9b64efeab", //production
-    //     "webMapID": "146d270ef13f400da5eeb04c578fe908", //dev 
-    //     "appID": "T2NYnYffgXujL6DV"
-    // };
-
-    // signInToArcGISPortal();
-
     arcgisUtils.createMap(app.webMapID, "mapDiv").then(function(response){
 
         app.map = response.map;
@@ -86,7 +78,6 @@ require([
         setOperationalLayersVisibility();
 
         initSearchWidget();
-
     });
 
     $(".month-select").change(trendChartDropdownSelectOnChangeHandler);
@@ -112,54 +103,7 @@ require([
             $(".waterstorage-legend").removeClass("hide");
         }
 
-        $(".data-layer-select option").removeAttr("selected");
-        $(".data-layer-select ").val(selectedMapLayer);
-        $('.data-layer-select option[value="'+selectedMapLayer+'"]').attr('selected','selected');
-
-        if(app.mainChart){
-            app.mainChart.toggleChartViews();
-        }
-
-        if(app.monthlyTrendChart){
-            app.monthlyTrendChart.highlightTrendLineByMonth(app.selectedMonth);
-            app.monthlyTrendChart.updateChartScale();
-        }
-
-        setOperationalLayersVisibility();
-
-    });
-
-    $(".layer-control-wrapper > div").on("click", function(d){
-        
-        $(this).addClass("active");
-        $(this).siblings().removeClass("active");
-
-        var targetLayer = $(this).attr("target-layer");
-
-        if(targetLayer === "precipitation"){
-            app.isWaterStorageChartVisible = false;
-
-            $(".data-layer-select option").removeAttr("selected");
-            $(".data-layer-select ").val("Precipitation");
-            $('.data-layer-select option[value="Precipitation"]').attr('selected','selected');
-
-            $(".waterfulx-legend").removeClass("hide");
-            $(".waterstorage-legend").addClass("hide");
-
-            $('.month-select option[value="Annual"]').text("Annual Total");
-
-        } else {
-            app.isWaterStorageChartVisible = true;
-
-            $(".data-layer-select option").removeAttr("selected");
-            $(".data-layer-select ").val("Soil Moisture");
-            $('.data-layer-select option[value="Soil Moisture"]').attr('selected','selected');
-
-            $(".waterfulx-legend").addClass("hide");
-            $(".waterstorage-legend").removeClass("hide");
-
-            $('.month-select option[value="Annual"]').text("Annual Average");
-        }
+        setDataLayerSelectValue(selectedMapLayer);
 
         if(app.mainChart){
             app.mainChart.toggleChartViews();
@@ -280,10 +224,6 @@ require([
 
                 domClass.remove(document.body, "app-loading");
 
-                // var mianChartData = chartData.filter(function(d){
-                //     return d.key !== "Runoff";
-                // });
-
                 toggleBottomPane(true);
 
                 app.monthlyTrendChart = new MonthlyTrendChart(chartData);
@@ -322,7 +262,6 @@ require([
         imageServiceIdentifyTaskParams.mosaicRule = getMosaicRule(imageServiceTitle);
 
         imageServiceIdentifyTask.execute(imageServiceIdentifyTaskParams).then(function(response) {
-            // console.log(response);
 
             if(response.value !== "NoData"){
                 var processedResults = processIdentifyTaskResults(response, imageServiceTitle);
@@ -424,37 +363,12 @@ require([
     }
 
     function initializeMapTimeAndZExtent(){
-
-        var visibleLayer = getWebMapLayerByVisibility();
-
         var startTime = convertUnixValueToTime(app.stdTimeInfo[app.stdTimeInfo.length - 1]);
         var endTime = getEndTimeValue(startTime);
-
-        // setZExtentForImageLayer(visibleLayer);
-
         updateMapTimeInfo(startTime, endTime);
     }
 
     function setOperationalLayersVisibility(){
-
-        // console.log(app.webMapItems.operationalLayers);
-
-        // var soilMoistureLayer = app.webMapItems.operationalLayers.filter(function(d){
-        //     return d.layerObject.name === "GLDAS_SoilMoisture"; 
-        // })[0];
-
-        // var precipLayer = app.webMapItems.operationalLayers.filter(function(d){
-        //     return d.layerObject.name === "GLDAS_Precipitation";
-        // })[0];
-
-        // if(app.isWaterStorageChartVisible) {
-        //     soilMoistureLayer.layerObject.show();
-        //     precipLayer.layerObject.hide();
-        // } else {
-        //     soilMoistureLayer.layerObject.hide();
-        //     precipLayer.layerObject.show();
-        // }
-
         var selectedMapLayerName = $(".map-layer-select").val();
 
         //hide all layers
@@ -468,30 +382,6 @@ require([
         })[0];
 
         selectedMapLayer.layerObject.show();
-
-    }
-
-    // function setZExtentForImageLayer(layer){
-    //     var mr = new MosaicRule({
-    //         "method" : "esriMosaicNone",
-    //         "ascending" : true,
-    //         "operation" : "MT_SUM"
-    //     });
-    //     mr.multidimensionalDefinition = [];
-    //     mr.multidimensionalDefinition.push(new DimensionalDefinition({
-    //         variableName: "",
-    //         dimensionName: "StdZ",
-    //         values: [[-2, 0]]
-    //     }));
-
-    //     layer.layerObject.setMosaicRule(mr);
-    // }
-
-    function getWebMapLayerByVisibility(){
-        var visibleLayers = app.webMapItems.operationalLayers.filter(function(d){
-            return d.visibility === true;
-        });
-        return visibleLayers[0];
     }
 
     function getOperationalLayersURL(webMapItems){
@@ -511,20 +401,10 @@ require([
         app.map.setTimeExtent(timeExtent);
     }
 
-    function getTimeExtent(startTime, endTime){
-        var timeExtent = new TimeExtent();
-        timeExtent.startTime = new Date(startTime);
-        timeExtent.endTime = new Date(endTime);
-        return timeExtent;
-    }
-
     function getEndTimeValue(startTime, timeInterval, esriTimeUnit){
-
         var formatedTimeUnit;
-
         timeInterval = timeInterval || 1;
         formatedTimeUnit = formatedTimeUnit || "days";
-
         return new Date(moment(startTime).add(timeInterval, formatedTimeUnit).format());
     }
 
@@ -546,9 +426,7 @@ require([
     }
 
     function toggleBottomPane(isVisible){
-
         var bottomPane = $(".bottom-pane");
-
         if(isVisible){
             bottomPane.addClass("visible");
         } else {
@@ -564,6 +442,17 @@ require([
         app.monthlyTrendChart.highlightTrendLineByMonth(selectedMonth);
         app.monthlyTrendChart.updateChartScale();
 
+        setOptionLabelForMonthSelect(selectedDataLayer);
+    }
+
+    function setDataLayerSelectValue(value){
+        $(".data-layer-select option").removeAttr("selected");
+        $(".data-layer-select ").val(value);
+        $('.data-layer-select option[value="'+value+'"]').attr('selected','selected');
+        setOptionLabelForMonthSelect(value);
+    }
+
+    function setOptionLabelForMonthSelect(selectedDataLayer){
         if(selectedDataLayer === "Soil Moisture" || selectedDataLayer === "Snowpack"){
             $('.month-select option[value="Annual"]').text("Annual Average");
         } else {
@@ -733,15 +622,15 @@ require([
                 return height - margin.top - yScale(d.value); 
             });
 
-        //create container for each data group
-        var features = svg.selectAll('features')
+        //create container for each line data group
+        var lineFeatures = svg.selectAll('line-features')
             // .data(evapoData)
-            .data(runoffData)
+            .data(runoffData.concat(evapoData))
             .enter().append('g')
-            .attr('class', 'features');
+            .attr('class', 'line-features');
             
         //append the line graphic
-        var lines = features.append('path')
+        var lines = lineFeatures.append('path')
             .attr('class', 'line')
             .attr('d', function(d){
                 return createLine(d.values);
@@ -920,7 +809,7 @@ require([
                 if(app.isWaterStorageChartVisible){
                     return d.key === "Soil Moisture" || d.key === "Snowpack";
                 } else {
-                    return d.key === "Precipitation" || d.key === "Runoff";
+                    return d.key === "Precipitation" || d.key === "Runoff" || d.key === "Evapotranspiration";
                 }
             });
 
@@ -930,7 +819,12 @@ require([
 
             tooltipData.forEach(function(d){
                 var textColor = (d.key === "Snowpack") ? "#909090": getColorByKey(d.key);
-                tooltipContent += '<span style="color:' + textColor + '">' +  d.key + ': ' +  parseInt(d.value) + '</span><br>';
+
+                var isElementVisible = $(".legend-wrapper[value='"+d.key+"']").is(':visible');
+
+                if(isElementVisible){
+                    tooltipContent += '<span style="color:' + textColor + '">' +  d.key + ': ' +  parseInt(d.value) + '</span><br>';
+                }
             });    
             
             tooltipDiv.html(tooltipContent)
@@ -1091,11 +985,6 @@ require([
 
         function setSummaryDescTextValue(changeInStorageValue, soilmoistureValue, monthName){
 
-            // 17 mm of water was added to storage this month. Total soil moisture is now 20% above average for February. 
-            // 5 mm of water was lost from storage this month. Total soil moisture is still 20% above average for February. 
-            // 2 mm of water was added to storage this month. Total soil moisture is still 12% below average for February.
-            // 22 mm of water was lost from storage this month. Total soil moisture is now 12% below average for February.
-
             var absValueOfChangeInStorage = Math.abs(changeInStorageValue);
             var addedOrLost = (changeInStorageValue >= 0) ? "added to" : "lost from";
 
@@ -1147,6 +1036,8 @@ require([
         }
         
         this.toggleChartViews = function(){
+
+            var selectedMapLayerName = $(".map-layer-select").val();
             
             this.unhighlightChartItems();
 
@@ -1156,7 +1047,7 @@ require([
                 lines.style("opacity", "0");
                 bars.style("opacity", "0");
             } else {
-                yScale.domain(getDomainFromData(precipData[0].values.concat(runoffData[0].values), "value"));
+                yScale.domain(getDomainFromData(precipData[0].values.concat(runoffData[0].values, evapoData[0].values), "value"));
                 areas.style("opacity", "0");
                 lines.style("opacity", ".8");
                 bars.style("opacity", ".8");
@@ -1180,6 +1071,31 @@ require([
             .attr("height", function(d) { 
                 return height - margin.top - yScale(d.value); 
             });
+
+            if(!app.isWaterStorageChartVisible){
+                var visibleLineFeatureKey;
+
+                if(selectedMapLayerName !== "Precipitation"){
+                    visibleLineFeatureKey = selectedMapLayerName;
+                    $(".legend-wrapper[value='Runoff']").hide();
+                    $(".legend-wrapper[value='Evapotranspiration']").hide();
+                    $(".legend-wrapper[value='" + selectedMapLayerName + "']").show();
+                } else {
+                    visibleLineFeatureKey = "Runoff";
+                    $(".legend-wrapper[value='Runoff']").show();
+                    $(".legend-wrapper[value='Evapotranspiration']").hide();
+                }
+
+                lines.each(function(d){
+                    var lineElement = d3.select(this).node();
+                    if(d.key === visibleLineFeatureKey){
+                        d3.select(lineElement).style("opacity", 0.8);
+                    }  
+                    else{
+                        d3.select(lineElement).style("opacity", 0);
+                    } 
+                });
+            }
         }
 
         this.highlightChartItemByLegendValue = function(legendValue){
@@ -1208,14 +1124,29 @@ require([
                         .exit().remove();
 
                 } else {
+                    var visibleLineFeatureKey;
+
                     //toggle precip bars or evapo lines
                     if(legendValue === "Precipitation"){
                         bars.style("opacity", ".8");
-                        lines.style("opacity", ".2");
-                    } else if (legendValue === "Runoff"){
+                        visibleLineFeatureKey = "Runoff";
+                        // lines.style("opacity", ".2");
+                    } else if (legendValue === "Runoff" || legendValue === "Evapotranspiration"){
                         bars.style("opacity", ".2");
-                        lines.style("opacity", ".8");
+                        visibleLineFeatureKey = legendValue;
+                        // lines.style("opacity", ".8");
                     }
+
+                    lines.each(function(d){
+                        var lineElement = d3.select(this).node();
+                        if(d.key === visibleLineFeatureKey){
+                            var visibleLineOpacity = (legendValue === "Precipitation") ? 0.2 : 0.8;
+                            d3.select(lineElement).style("opacity", visibleLineOpacity);
+                        }  
+                        else{
+                            d3.select(lineElement).style("opacity", 0);
+                        } 
+                    });
                 }
 
             } else {
@@ -1887,24 +1818,18 @@ require([
         }
 
         this.getChangeInStorageDataByMonth = function(fullMonthName){
-
             var changeInStorageDataByMonth = changeInStorageDataNested[0].values.filter(function(d){
                 return d.key === fullMonthName;
             });
-
             return changeInStorageDataByMonth[0];
         }
 
         this.getSoilMoistureDataByMonth = function(fullMonthName){
-
             var soilMoistureDataByMonth = soilMoistureDataNested[0].values.filter(function(d){
                 return d.key === fullMonthName;
             });
-
             return soilMoistureDataByMonth[0];
         }
-
-        // this.updateChartScale();
     }
 
     function getColorByKey(key){
@@ -1961,6 +1886,4 @@ require([
         var avg = sum / data.length;
         return avg;
     }
-
-
 });
