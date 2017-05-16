@@ -93,6 +93,42 @@ require([
 
     $(".data-layer-select").change(trendChartDropdownSelectOnChangeHandler);
 
+    $(".map-layer-select").change(function(){
+        var selectedMapLayer = $(this).val();
+        var selectedMapLayerCategory = $(".map-layer-select option:selected").attr("category");
+
+        if(selectedMapLayerCategory === "waterflux"){
+
+            app.isWaterStorageChartVisible = false;
+
+            $(".waterfulx-legend").removeClass("hide");
+            $(".waterstorage-legend").addClass("hide");
+
+        } else {
+
+            app.isWaterStorageChartVisible = true;
+
+            $(".waterfulx-legend").addClass("hide");
+            $(".waterstorage-legend").removeClass("hide");
+        }
+
+        $(".data-layer-select option").removeAttr("selected");
+        $(".data-layer-select ").val(selectedMapLayer);
+        $('.data-layer-select option[value="'+selectedMapLayer+'"]').attr('selected','selected');
+
+        if(app.mainChart){
+            app.mainChart.toggleChartViews();
+        }
+
+        if(app.monthlyTrendChart){
+            app.monthlyTrendChart.highlightTrendLineByMonth(app.selectedMonth);
+            app.monthlyTrendChart.updateChartScale();
+        }
+
+        setOperationalLayersVisibility();
+
+    });
+
     $(".layer-control-wrapper > div").on("click", function(d){
         
         $(this).addClass("active");
@@ -401,21 +437,38 @@ require([
 
     function setOperationalLayersVisibility(){
 
-        var soilMoistureLayer = app.webMapItems.operationalLayers.filter(function(d){
-            return d.layerObject.name === "GLDAS_SoilMoisture"; 
+        // console.log(app.webMapItems.operationalLayers);
+
+        // var soilMoistureLayer = app.webMapItems.operationalLayers.filter(function(d){
+        //     return d.layerObject.name === "GLDAS_SoilMoisture"; 
+        // })[0];
+
+        // var precipLayer = app.webMapItems.operationalLayers.filter(function(d){
+        //     return d.layerObject.name === "GLDAS_Precipitation";
+        // })[0];
+
+        // if(app.isWaterStorageChartVisible) {
+        //     soilMoistureLayer.layerObject.show();
+        //     precipLayer.layerObject.hide();
+        // } else {
+        //     soilMoistureLayer.layerObject.hide();
+        //     precipLayer.layerObject.show();
+        // }
+
+        var selectedMapLayerName = $(".map-layer-select").val();
+
+        //hide all layers
+        app.webMapItems.operationalLayers.forEach(function(d){
+            d.layerObject.hide();
+        });
+
+        //show selected layer
+        var selectedMapLayer = app.webMapItems.operationalLayers.filter(function(d){
+            return d.title === selectedMapLayerName; 
         })[0];
 
-        var precipLayer = app.webMapItems.operationalLayers.filter(function(d){
-            return d.layerObject.name === "GLDAS_Precipitation";
-        })[0];
+        selectedMapLayer.layerObject.show();
 
-        if(app.isWaterStorageChartVisible) {
-            soilMoistureLayer.layerObject.show();
-            precipLayer.layerObject.hide();
-        } else {
-            soilMoistureLayer.layerObject.hide();
-            precipLayer.layerObject.show();
-        }
     }
 
     // function setZExtentForImageLayer(layer){
@@ -1071,25 +1124,6 @@ require([
                     isSoilMoistureAboveNormal = "now";
                 }
             }
-
-            console.log("");
-            console.log("pctSoilMoistureFromAve", pctSoilMoistureFromAve);
-            console.log("soilmoistureValue", soilmoistureValue);
-            console.log("avgOfSoilMoistureValues", avgOfSoilMoistureValues);
-
-            // if(pctSoilMoistureFromAve >= 0){
-            //     if(avgOfSoilMoistureValues + stdDevOfSoilMoistureValues > soilmoistureValue){
-            //         isSoilMoistureAboveNormal = "now";
-            //     } else {
-            //         isSoilMoistureAboveNormal = "still";
-            //     }
-            // } else {
-            //     if(avgOfSoilMoistureValues - stdDevOfSoilMoistureValues < soilmoistureValue){
-            //         isSoilMoistureAboveNormal = "now";
-            //     } else {
-            //         isSoilMoistureAboveNormal = "still";
-            //     }
-            // }
 
             var descTextElements = [ 
                 absValueOfChangeInStorage + "mm",

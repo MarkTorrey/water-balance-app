@@ -67,13 +67,23 @@
 
     <div id="mapDiv"></div> 
 
-    <div class="layer-control-wrapper">
+    <!--<div class="layer-control-wrapper">
         <div target-layer="soil-moisture" class="active">
             <span>Soil Moisture</span>
         </div>
         <div target-layer="precipitation">
             <span>Precipitation</span>
         </div>
+    </div>-->
+
+    <div class="map-layer-select-wrapper">
+        <select class="modifier-class map-layer-select">
+            <option category="waterstorage" value="Soil Moisture">Soil Moisture</option>
+            <option category="waterstorage" value="Snowpack">Snowpack</option>
+            <option category="waterflux" value="Precipitation">Precipitation</option>
+            <option category="waterflux" value="Evapotranspiration">Evapotranspiration</option>
+            <option category="waterflux" value="Runoff">Runoff</option>
+        </select>
     </div>
 
     <div class="bottom-pane">
@@ -84,11 +94,11 @@
             </div>
 
             <div class="summary-table-wrapper row">
-                <div><span class="left">precipitation</span><span class="precip-value with-unit right">200</span></div>
-                <div><span class="left">runoff</span><span class="runoff-value with-unit right">12</span></div>
-                <div><span class="left">evapotranspiration</span><span class="evapo-value with-unit right">100</span></div>
-                <div><span class="left">soil moisture</span><span class="soilmoisture-value with-unit right">52</span></div>
-                <div><span class="left">snowpack</span><span class="snowpack-value with-unit right">0</span></div>
+                <div><span class="left">precipitation</span><span class="precip-value with-unit right"></span></div>
+                <div><span class="left">runoff</span><span class="runoff-value with-unit right"></span></div>
+                <div><span class="left">evapotranspiration</span><span class="evapo-value with-unit right"></span></div>
+                <div><span class="left">soil moisture</span><span class="soilmoisture-value with-unit right"></span></div>
+                <div><span class="left">snowpack</span><span class="snowpack-value with-unit right"></span></div>
             </div>
 
 

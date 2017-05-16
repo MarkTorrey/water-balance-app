@@ -158,8 +158,20 @@ div.search-input-wrapper > div {
     float: right;
 }
 
-.layer-control-wrapper {
+/*.layer-control-wrapper {
     height: 40px;
+    width: 250px;
+    background-color: #efefef;
+    top: 65px;
+    right: 15px;
+    position: absolute;
+    display: -webkit-flex;
+    display: flex;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}*/
+
+.map-layer-select-wrapper {
+    height: 50px;
     width: 250px;
     background-color: #efefef;
     top: 65px;
