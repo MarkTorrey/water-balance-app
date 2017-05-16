@@ -15,61 +15,24 @@
     <link rel="stylesheet" href="//js.arcgis.com/3.16/esri/themes/calcite/esri/esri.css">
 
     <style>
-        .scale-chart-wrapper {
-            width: 225px;
-            height: auto;
+        .wrapper {
+            width: 200px;
+            height: 50px;
             position: absolute;
             top: 10px;
             left: 10px;
-            /*background-color: #efefef;*/
-            padding: 0 5px;
+            background-color: #909090;
         }
 
-        div.scale-chart-wrapper > div.scale-chart-label {
-            height: 15px;
+        select {
+            font-size: 14px;
+            height: 3rem;
+            line-height: 3rem;
+            width: 90%;
+            margin: auto;
+            color: #505050;
         }
 
-        div.scale-chart-label > span {
-            width: 55px;
-            font-size: 11px;
-            line-height: 15px;
-        }
-        
-        div.scale-chart-label > span.left {
-            float: left !important;
-        }
-
-        div.scale-chart-label > span.right {
-            float: right !important;
-            text-align: right;
-        }
-
-        .scale-chart-wrapper > div.scale-chart-rect {
-            height: 25px;
-            background: linear-gradient(to right, #b2182b 0%, #ef8a62 20%, #fddbc7 40%, #d1e5f0 60%, #67a9cf 80%, #2166ac 100%);
-        }
-
-        div.scale-chart-rect > div.scale-chart-tooltip {
-            position: relative;
-            width: 50px;
-            height: 170%;
-            margin-left: 50%;
-        }
-
-        div.scale-chart-tooltip > div.scale-chart-tooltip-line {
-            margin: 0 auto;
-            height: 25px;
-            width: 2px;
-            background-color: #303030;
-        }
-
-        div.scale-chart-tooltip > div.scale-chart-tooltip-text {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            text-align: center;
-            width: 100%;
-        }
     </style>
 
     <script>
@@ -98,20 +61,14 @@
 
 <body class="calcite">
     
-    <div class="scale-chart-wrapper">
-        <div class="scale-chart-label">
-            <span class="left">depletion</span>
-            <span class="right">recharge</span>
-        </div>
-        <div class="scale-chart-rect">
-            <div class="scale-chart-tooltip">
-                <div class="scale-chart-tooltip-line"></div>
-                <div class="scale-chart-tooltip-text"><span>10mm</span></div>
-            </div>
-        </div>
+    <div class="wrapper">
+        <select class="modifier-class">
+            <option value="">Menu 1</option>
+            <option value="">Menu 2</option>
+            <option value="">Menu 3</option>
+            <option value="">Menu 4</option>
+        </select>
     </div>
 
-
-        
 </body>
 </html>
