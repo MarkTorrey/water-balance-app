@@ -993,9 +993,9 @@ require([
             // //update the position of scale chart tooltip
             // $(".scale-chart-tooltip").css("margin-left", tooltipAbsolutePosition + "px");
 
-            setFoobarPostion("scale-chart-rect", "scale-chart-tooltip", ratioToAbsMaxValue);
+            setHorizontalPosition("scale-chart-rect", "scale-chart-tooltip", ratioToAbsMaxValue);
 
-            setFoobarPostion("scale-chart-rect", "scale-chart-normal-value-indicator", aveToAbsMaxValue)
+            setHorizontalPosition("scale-chart-rect", "scale-chart-normal-value-indicator", aveToAbsMaxValue)
 
             // var tooltipTextWidth = $("div.scale-chart-tooltip-text").width();
 
@@ -1011,7 +1011,7 @@ require([
 
         }
 
-        function setFoobarPostion(containerElementClassName, floatingElementClassName, ratio){
+        function setHorizontalPosition(containerElementClassName, floatingElementClassName, ratio){
 
             var containerElement = $("." + containerElementClassName);
 
