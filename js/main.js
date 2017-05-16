@@ -1006,6 +1006,10 @@ require([
                 } else {
                     isSoilMoistureAboveNormal = "still";
                 }
+
+                if(changeInStorageValue === 0){
+                    isSoilMoistureAboveNormal = "now";
+                }
             } else {
                 if(soilmoistureValue > avgOfSoilMoistureValues){
                     isSoilMoistureAboveNormal = "still";
@@ -1029,7 +1033,9 @@ require([
                 monthName + "."
             ];
 
-            var descText = descTextElements.join(" ") + " " + descTextElements1.join(" ");
+            var descText1 = (pctSoilMoistureFromAve) ? descTextElements1.join(" ") : " Total soil moisture is about the average for " + monthName + ".";
+
+            var descText = descTextElements.join(" ") + " " + descText1;
 
             $(".summary-desc-text-div > span").text(descText);
 
