@@ -566,7 +566,7 @@ require([
                 .attr("height", height);
 
         var xScale = d3.time.scale()
-            .domain(xScaleDomain)
+            .domain(getXScaleDomainByContainerSize())
             .range([0, width - margin.right - xAxisWidthOffset]);
 
         var yScale = d3.scale.linear()
@@ -609,9 +609,11 @@ require([
             })
             .interpolate("cardinal"); //interpolate the straight lines into curve lines
 
-        var barWidth = Math.floor((width/precipData[0].values.length) * 0.8);
+        // var barWidth = Math.floor((width/precipData[0].values.length) * 0.8);
 
-        barWidth = (!barWidth) ? 0.5 : barWidth;
+        // barWidth = (!barWidth) ? 0.5 : barWidth;
+
+        var barWidth = getBarChartWidth();
 
         var bars = svg.selectAll("bar")
             .data(precipData[0].values)
@@ -788,17 +790,18 @@ require([
             .call(zoom);
 
         function zoomed() {
+
             var minDate = xScaleDomain[0];
             var maxDate = xScaleDomain[1];
 
-            var x;
+            var zoomTranslateX;
 
             if (xScale.domain()[0] < minDate) {
-                x = zoom.translate()[0] - xScale(minDate) + xScale.range()[0];
-                zoom.translate([x, 0]);
+                zoomTranslateX = zoom.translate()[0] - xScale(minDate) + xScale.range()[0];
+                zoom.translate([zoomTranslateX, 0]);
             } else if (xScale.domain()[1] > maxDate) {
-                x = zoom.translate()[0] - xScale(maxDate) + xScale.range()[1];
-                zoom.translate([x, 0]);
+                zoomTranslateX = zoom.translate()[0] - xScale(maxDate) + xScale.range()[1];
+                zoom.translate([zoomTranslateX, 0]);
             }
 
             xAxisG.call(xAxis);
@@ -811,14 +814,12 @@ require([
                 return createArea(d.values); 
             });
 
-            barWidth = Math.floor((width/precipData[0].values.length) * 0.8);
-
-            barWidth = (!barWidth) ? 0.5 : barWidth;
+            var newBarWidth = getBarChartWidth();
 
             bars.attr("x", function(d) { 
-                    return xScale(d.stdTime) - barWidth/2; 
+                    return xScale(d.stdTime) - newBarWidth/2; 
                 })
-                .attr("width", barWidth)
+                .attr("width", newBarWidth)
                 .attr("y", function(d) { 
                     return yScale(d.value); 
                 })
@@ -827,6 +828,25 @@ require([
                 });
 
             setHighlightRefLineByTime(highlightTimeValue);
+        }
+
+        function getBarChartWidth(){
+
+            var currentZoomExtentMin = xScale.invert(0);
+            var currentZoomExtentMax = xScale.invert(width);
+
+            var uniqueTimeValuesInZoomExtent = uniqueTimeValues.filter(function(d){
+                var formatedTimeValue = new Date(d);
+                return formatedTimeValue >= currentZoomExtentMin && formatedTimeValue <= currentZoomExtentMax;
+            });
+
+            // var newBarWidth = Math.floor((width/uniqueTimeValuesInZoomExtent.length) * 0.8);
+
+            var newBarWidth = (width/uniqueTimeValuesInZoomExtent.length) * 0.7;
+
+            // newBarWidth = (!newBarWidth) ? 0.5 : newBarWidth;
+
+            return newBarWidth;
         }
 
         function dragmove(d){
@@ -1345,14 +1365,16 @@ require([
                 return createArea(d.values); 
             });
 
-            barWidth = Math.floor((width/precipData[0].values.length) * 0.8);
+            // barWidth = Math.floor((width/precipData[0].values.length) * 0.8);
 
-            barWidth = (!barWidth) ? 0.5 : barWidth;
+            // barWidth = (!barWidth) ? 0.5 : barWidth;
+
+            var newBarWidth = getBarChartWidth();
 
             bars.attr("x", function(d) { 
-                    return xScale(d.stdTime) - barWidth/2; 
+                    return xScale(d.stdTime) - newBarWidth/2; 
                 })
-                .attr("width", barWidth)
+                .attr("width", newBarWidth)
                 .attr("y", function(d) { 
                     return yScale(d.value); 
                 })
