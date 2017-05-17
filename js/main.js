@@ -542,6 +542,8 @@ require([
             return d.key === "Runoff";
         });
 
+        var xScaleDomain = getDomainFromData(precipData[0].values, "stdTime");
+
         // Set the dimensions of the canvas / graph
         var margin = {top: 20, right: 10, bottom: 5, left: 40};
         var width = container.width() - margin.left - margin.right;
@@ -557,8 +559,14 @@ require([
                 .attr('class', 'canvas-element')
                 .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
+        var chartAreaClip = svg.append('clipPath')
+            .attr('id', 'chartAreaClip')
+            .append('rect')
+                .attr("width", width - margin.right - xAxisWidthOffset)
+                .attr("height", height);
+
         var xScale = d3.time.scale()
-            .domain(getDomainFromData(precipData[0].values, "stdTime"))
+            .domain(xScaleDomain)
             .range([0, width - margin.right - xAxisWidthOffset]);
 
         var yScale = d3.scale.linear()
@@ -569,10 +577,10 @@ require([
         var xAxis = d3.svg.axis()
             .scale(xScale)
             .orient("bottom")
-            .ticks(uniqueYearValues.length)
-            .tickPadding(5)
-            .innerTickSize(-(height - margin.top))
-            .tickFormat(timeFormat);
+            // .ticks(uniqueYearValues.length)
+            .tickPadding(10)
+            .innerTickSize(-(height - margin.top));
+            // .tickFormat(timeFormat);
 
         var yAxis = d3.svg.axis()
             .scale(yScale)
@@ -608,6 +616,7 @@ require([
         var bars = svg.selectAll("bar")
             .data(precipData[0].values)
             .enter().append("rect")
+            .attr("clip-path", "url(#chartAreaClip)")
             .style("fill", getColorByKey("Precipitation"))
             .style("opacity", 0.7)
             .attr("x", function(d) { 
@@ -632,6 +641,7 @@ require([
         //append the line graphic
         var lines = lineFeatures.append('path')
             .attr('class', 'line')
+            .attr("clip-path", "url(#chartAreaClip)")
             .attr('d', function(d){
                 return createLine(d.values);
             })
@@ -671,7 +681,8 @@ require([
             .y1(function(d) { return yScale(d.y0 + d.y); });
 
         var areasG = svg.append('g')
-            .attr("class", "area-layers-group");
+            .attr("class", "area-layers-group")
+            .attr("clip-path", "url(#chartAreaClip)");
         
         var areas = areasG.selectAll(".area-layer")
             .data(areaChartLayers)
@@ -736,10 +747,29 @@ require([
             .style('fill', '#fff')
             .style("cursor", 'crosshair');
 
+        var zoom = d3.behavior.zoom()
+            .x(xScale)
+            .scaleExtent([1, 20])
+            .on("zoomstart", function(){
+                verticalLine.style("display", "none"); 
+                tooltipDiv.style("display", "none"); 
+            })
+            .on("zoomend", function(){
+                verticalLine.style("display", null); 
+                tooltipDiv.style("display", null);
+            })
+            .on("zoom", zoomed);
+
+        function nozoom() {
+            d3.event.preventDefault();
+        }
+
         var overlay = svg.append("rect")
-            .attr("class", "overlay")
-            .attr("width", width)
-            .attr("height", height)
+            .attr("class", "main-chart-overlay")
+            .attr("width", width - margin.right - xAxisWidthOffset)
+            .attr("height", height - margin.top)
+            .on("touchstart", nozoom)
+            .on("touchmove", nozoom)
             .on("mouseover", function() { 
                 verticalLine.style("display", null); 
                 tooltipDiv.style("display", null);
@@ -751,9 +781,53 @@ require([
             })
             .on("mousemove", mousemove)
             .on('click', function(){
+                if (d3.event.defaultPrevented) return; // zoomed
                 highlightTimeValue = currentTimeValueByMousePosition;
                 updateMapAndChartByTime(highlightTimeValue);
-            });  
+            })
+            .call(zoom);
+
+        function zoomed() {
+            var minDate = xScaleDomain[0];
+            var maxDate = xScaleDomain[1];
+
+            var x;
+
+            if (xScale.domain()[0] < minDate) {
+                x = zoom.translate()[0] - xScale(minDate) + xScale.range()[0];
+                zoom.translate([x, 0]);
+            } else if (xScale.domain()[1] > maxDate) {
+                x = zoom.translate()[0] - xScale(maxDate) + xScale.range()[1];
+                zoom.translate([x, 0]);
+            }
+
+            xAxisG.call(xAxis);
+
+            lines.attr('d', function(d){
+                return createLine(d.values);
+            });
+
+            areas.attr("d", function(d) { 
+                return createArea(d.values); 
+            });
+
+            barWidth = Math.floor((width/precipData[0].values.length) * 0.8);
+
+            barWidth = (!barWidth) ? 0.5 : barWidth;
+
+            bars.attr("x", function(d) { 
+                    return xScale(d.stdTime) - barWidth/2; 
+                })
+                .attr("width", barWidth)
+                .attr("y", function(d) { 
+                    return yScale(d.value); 
+                })
+                .attr("height", function(d) { 
+                    return height - margin.top - yScale(d.value); 
+                });
+
+            setHighlightRefLineByTime(highlightTimeValue);
+        }
 
         function dragmove(d){
 
@@ -869,17 +943,25 @@ require([
         function setHighlightRefLineByTime(time){
             var xPosByTime = xScale(time);
 
-            highlightRefLine.attr("transform", function () {
-                return "translate(" + xPosByTime + ", 0)";
-            });  
+            var xScaleRange = xScale.range();
 
-            highlightRefLine.style("display", null); 
+            if(xPosByTime >= xScaleRange[0] && xPosByTime <= xScaleRange[1]){
+                highlightRefLine.style("display", null); 
+                highlightRefLineLabel.style("display", null); 
 
-            highlightRefLineLabel.attr("transform", function () {
-                return "translate(" + xPosByTime + ", -20)";
-            });  
+                highlightRefLine.attr("transform", function () {
+                    return "translate(" + xPosByTime + ", 0)";
+                });  
 
-            highlightRefLineLabelText.text(timeFormatWithMonth(new Date(time)));
+                highlightRefLineLabel.attr("transform", function () {
+                    return "translate(" + xPosByTime + ", -20)";
+                });  
+
+                highlightRefLineLabelText.text(timeFormatWithMonth(new Date(time)));
+            } else {
+                highlightRefLine.style("display", "none"); 
+                highlightRefLineLabel.style("display", "none"); 
+            }
         }
 
         function getChartDataByTime(time, inputData){
@@ -1224,14 +1306,26 @@ require([
         }
 
         this.resize = function(){
+
+            var xScaleDomainByContainerSize = getXScaleDomainByContainerSize();
+
+            var zoomScaleExtentByContainerSize = (xScaleDomainByContainerSize[0] === xScaleDomain[0]) ? [1, 20] : [1, 10];
+            
             width = container.width() - margin.left - margin.right - 5;
             height = container.height() - margin.top - margin.bottom - 5;
 
             // Update the range of the scale with new width/height
             xScale.range([0, width - margin.right - xAxisWidthOffset]);
+
+            xScale.domain(xScaleDomainByContainerSize);
+
+            zoom.x(xScale).scaleExtent(zoomScaleExtentByContainerSize);
+            
             yScale.range([height - margin.top, 0]);
 
             yAxis.innerTickSize(-(width - margin.right - xAxisWidthOffset));
+
+            chartAreaClip.attr("width", width - margin.right - xAxisWidthOffset);
 
             // // Update the tick marks
             // xAxis.ticks(Math.max(width/75, 2));
@@ -1266,10 +1360,25 @@ require([
                     return height - margin.top - yScale(d.value); 
                 });
             
-            overlay.attr("width", width).attr("height", height);
+            overlay.attr("width", width - margin.right - xAxisWidthOffset)
+            .attr("height", height - margin.top);
 
             setHighlightRefLineByTime(highlightTimeValue);
+        }
 
+        function getXScaleDomainByContainerSize(){
+            var containerSize = container.width();
+            var xScaleDomainByWindowSize;
+
+            if(containerSize <= 900){
+                xScaleDomainByWindowSize = [uniqueTimeValues[uniqueTimeValues.length - 61], uniqueTimeValues[uniqueTimeValues.length - 1]];
+                // zoom.x(xScale).scaleExtent([1, 10]);
+            } else {
+                xScaleDomainByWindowSize = xScaleDomain;
+                // zoom.x(xScale).scaleExtent([1, 20]);
+            }
+
+            return xScaleDomainByWindowSize;
         }
 
         updateMapAndChartByTime(highlightTimeValue, true);

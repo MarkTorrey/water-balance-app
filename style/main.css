@@ -548,6 +548,12 @@ div.tooltip {
     pointer-events: all;
 }  
 
+.main-chart-overlay {
+    /*fill: rgba(0, 0, 0, 0.3);*/
+    fill: none;
+    pointer-events: all;
+}  
+
 select {
     font-size: 14px;
     height: 3rem;
