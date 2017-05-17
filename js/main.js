@@ -982,32 +982,9 @@ require([
 
             $(".scale-chart-normal-value-text > span").text("Normal")
 
-            // var scaleChartWidthHalf = $(".scale-chart-rect").width() / 2;
-
-            // var tooltipDivWidthHalf = $(".scale-chart-tooltip").width() / 2;
-
-            // var tooltipAbsolutePosition = (ratioToAbsMaxValue >= 0) ? 
-            //                               (scaleChartWidthHalf + (scaleChartWidthHalf * ratioToAbsMaxValue)) - tooltipDivWidthHalf : 
-            //                               (scaleChartWidthHalf * (1 + ratioToAbsMaxValue)) - tooltipDivWidthHalf; 
-            
-            // //update the position of scale chart tooltip
-            // $(".scale-chart-tooltip").css("margin-left", tooltipAbsolutePosition + "px");
-
             setHorizontalPosition("scale-chart-rect", "scale-chart-tooltip", ratioToAbsMaxValue);
 
             setHorizontalPosition("scale-chart-rect", "scale-chart-normal-value-indicator", aveToAbsMaxValue)
-
-            // var tooltipTextWidth = $("div.scale-chart-tooltip-text").width();
-
-            // var tooltipTextLeftMargin = 0;
-
-            // if(ratioToAbsMaxValue >= 0){
-            //     tooltipTextLeftMargin = tooltipDivWidthHalf - tooltipTextWidth - 3;
-            // } else {
-            //     tooltipTextLeftMargin = tooltipDivWidthHalf + 3;
-            // }
-
-            // $("div.scale-chart-tooltip-text").css("margin-left", tooltipTextLeftMargin + "px");
 
         }
 
@@ -1041,8 +1018,6 @@ require([
 
                 $("div.scale-chart-tooltip-text").css("margin-left", tooltipTextLeftMargin + "px");
             }
-
-
         }
 
         function setSummaryDescTextValue(changeInStorageValue, soilmoistureValue, monthName){
