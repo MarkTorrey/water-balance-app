@@ -42,7 +42,8 @@ require([
     'use strict';
 
     var app = {
-        "webMapID": "146d270ef13f400da5eeb04c578fe908", //dev 
+        // "webMapID": "146d270ef13f400da5eeb04c578fe908", //dev from Jinnan
+        "webMapID": "c132c7e396f64a11bfa1c24082bdb0c5", //dev from Daniel
         "appID": "T2NYnYffgXujL6DV"
     };
 
@@ -371,9 +372,11 @@ require([
     function setOperationalLayersVisibility(){
         var selectedMapLayerName = $(".map-layer-select").val();
 
-        //hide all layers
+        //hide all image service layers
         app.webMapItems.operationalLayers.forEach(function(d){
-            d.layerObject.hide();
+            if(d.layerType === "ArcGISImageServiceLayer"){
+                d.layerObject.hide();
+            }
         });
 
         //show selected layer
@@ -386,11 +389,12 @@ require([
 
     function getOperationalLayersURL(webMapItems){
         var operationalLayersURL = webMapItems.operationalLayers.map(function(d){
-            return {
-                "title": d.title,
-                "url": d.url
-            };
+            return { "title": d.title, "url": d.url, "layerType": d.layerType };
         });
+        operationalLayersURL = operationalLayersURL.filter(function(d){
+            return d.layerType === "ArcGISImageServiceLayer";
+        });
+        console.log(operationalLayersURL);
         return operationalLayersURL;
     }
 
