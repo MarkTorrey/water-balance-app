@@ -478,7 +478,7 @@ require([
 
         var timeFormatFullMonthName = d3.time.format("%B");
 
-        var formatFoo = d3.time.format.multi([
+        var timeFormatMulti = d3.time.format.multi([
             [".%L", function(d) { return d.getMilliseconds(); }],
             [":%S", function(d) { return d.getSeconds(); }],
             ["%I:%M", function(d) { return d.getMinutes(); }],
@@ -591,7 +591,7 @@ require([
             // .ticks(uniqueYearValues.length)
             .tickPadding(10)
             .innerTickSize(-(height - margin.top))
-            .tickFormat(formatFoo);
+            .tickFormat(timeFormatMulti);
 
         var yAxis = d3.svg.axis()
             .scale(yScale)
@@ -762,7 +762,8 @@ require([
 
         var zoom = d3.behavior.zoom()
             .x(xScale)
-            .scaleExtent([1, 20])
+            .scaleExtent(getScaleExtentByContainerSize())
+            // .scaleExtent([1, 20])
             .on("zoomstart", function(){
                 verticalLine.style("display", "none"); 
                 tooltipDiv.style("display", "none"); 
@@ -1340,7 +1341,7 @@ require([
 
             var xScaleDomainByContainerSize = getXScaleDomainByContainerSize();
 
-            var zoomScaleExtentByContainerSize = (xScaleDomainByContainerSize[0] === xScaleDomain[0]) ? [1, 20] : [1, 10];
+            // var zoomScaleExtentByContainerSize = (xScaleDomainByContainerSize[0] === xScaleDomain[0]) ? [1, 20] : [1, 10];
             
             width = container.width() - margin.left - margin.right - 5;
             height = container.height() - margin.top - margin.bottom - 5;
@@ -1350,7 +1351,7 @@ require([
 
             xScale.domain(xScaleDomainByContainerSize);
 
-            zoom.x(xScale).scaleExtent(zoomScaleExtentByContainerSize);
+            zoom.x(xScale).scaleExtent(getScaleExtentByContainerSize());
             
             yScale.range([height - margin.top, 0]);
 
@@ -1414,10 +1415,24 @@ require([
             return xScaleDomainByWindowSize;
         }
 
+        function getScaleExtentByContainerSize(){
+            var containerSize = container.width();
+            var scaleExtent;
+
+            if(containerSize <= 900){
+                scaleExtent = [1, 10];
+            } else {
+                scaleExtent = [1, 20];
+            }
+
+            return scaleExtent;
+        }
+
+
+
         updateMapAndChartByTime(highlightTimeValue, true);
 
         this.toggleChartViews();
-
     }
 
     function MonthlyTrendChart(data){
@@ -1841,7 +1856,7 @@ require([
 
             tooltipTextForXValue.text(xValueByMousePos);
 
-            tooltipTextForYValue.text(round(yValueByMousePos, 0));
+            tooltipTextForYValue.text(round(yValueByMousePos, 0) + " mm");
 
             tooltipGroupForXValue.attr("transform", function () {
                 return "translate(" + (tickPos[xI] - tooltipWrapperRectWidth/2) + ", " + (-tooltipWrapperRectHeight) + ")";

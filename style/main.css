@@ -224,6 +224,8 @@ div.search-input-wrapper > div {
     /*justify-content: center;
     align-content: flex-start;
     align-items: flex-start;*/
+
+    box-shadow: 0 -5px 5px -5px rgba(0,0,0,.4);
 }
 
 .bottom-pane.visible {
@@ -233,6 +235,19 @@ div.search-input-wrapper > div {
 .bottom-pane > div {
     height: 100%;
 }
+
+/*.bottom-pane > div.bottom-pane-toggle-view-btn {
+    position: absolute;
+    top: -20px;;
+    right: 10px;
+    height: 20px;
+    width: 40px;
+    background-color: #e9e9e9;
+}
+
+div.bottom-pane-toggle-view-btn:hover {
+    background-color: #0079c1;
+}*/
 
 .bottom-pane > div.summary-info-wrapper {
     /*background-color: #f2f2f2;*/
@@ -474,7 +489,7 @@ span.right {
 }
 
 span.with-unit::after {
-    content: "mm";
+    content: " mm";
 }
 
 @media (max-width: 1280px) {
