@@ -48,41 +48,28 @@ require([
     };
 
     arcgisUtils.createMap(app.webMapID, "mapDiv").then(function(response){
-
         app.map = response.map;
-
         app.webMapItems = response.itemInfo.itemData;
-
-        //app.operationalLayersURL contains image layer names and urls that will be used to do identifyTasks
         app.operationalLayersURL = getOperationalLayersURL(app.webMapItems);
-
-        //display chart with soil moisture and snowpack data if app.isWaterStorageChartVisible is true; 
-        //otherwise, show chart with precip and runoff
-        app.isWaterStorageChartVisible = true;
-
+        app.isWaterStorageChartVisible = true; //display chart with soil moisture and snowpack data if app.isWaterStorageChartVisible is true; otherwise, show chart with precip and runoff
+        
         connect.disconnect(response.clickEventHandle);
 
         //get the list of StdTime values from the image service's multidimensionalInfo
         getStdTimeInfo().then(function(stdTimeInfo){
-
             app.stdTimeInfo = stdTimeInfo;
-
             app.map.on("click", function(event){
                 if(!$("body").hasClass("app-loading")){
                     getImageLayerDataByLocation(event.mapPoint);
                 }
             });
-
+            setOperationalLayersVisibility();
             initializeMapTimeAndZExtent();
         });
-
-        setOperationalLayersVisibility();
-
         initSearchWidget();
     });
 
     $(".month-select").change(trendChartDropdownSelectOnChangeHandler);
-
     $(".data-layer-select").change(trendChartDropdownSelectOnChangeHandler);
 
     $(".map-layer-select").change(function(){
@@ -90,16 +77,11 @@ require([
         var selectedMapLayerCategory = $(".map-layer-select option:selected").attr("category");
 
         if(selectedMapLayerCategory === "waterflux"){
-
             app.isWaterStorageChartVisible = false;
-
             $(".waterfulx-legend").removeClass("hide");
             $(".waterstorage-legend").addClass("hide");
-
         } else {
-
             app.isWaterStorageChartVisible = true;
-
             $(".waterfulx-legend").addClass("hide");
             $(".waterstorage-legend").removeClass("hide");
         }
@@ -109,12 +91,10 @@ require([
         if(app.mainChart){
             app.mainChart.toggleChartViews();
         }
-
         if(app.monthlyTrendChart){
             app.monthlyTrendChart.highlightTrendLineByMonth(app.selectedMonth);
             app.monthlyTrendChart.updateChartScale();
         }
-
         setOperationalLayersVisibility();
     });
 
@@ -210,11 +190,9 @@ require([
     function getImageLayerDataByLocation(inputGeom){
 
         var identifyTaskInputGeometry = inputGeom;
-
         var chartData = [];
 
         var identifyTaskOnSuccessHandler = function(results){
-
             chartData.push(results);
 
             if(results.key === "Runoff"){
@@ -222,24 +200,16 @@ require([
             } 
 
             if(chartData.length === app.operationalLayersURL.length){
-
                 domClass.remove(document.body, "app-loading");
-
                 toggleBottomPane(true);
-
                 app.monthlyTrendChart = new MonthlyTrendChart(chartData);
-
                 app.mainChart = new MainChart(chartData);
-
             }
         };
 
         domClass.add(document.body, "app-loading");
-
         app.map.centerAt(identifyTaskInputGeometry);
-
         toggleBottomPane(false);
-
         addPointToMAp(identifyTaskInputGeometry);
 
         app.operationalLayersURL.forEach(function(d){
@@ -394,7 +364,6 @@ require([
         operationalLayersURL = operationalLayersURL.filter(function(d){
             return d.layerType === "ArcGISImageServiceLayer";
         });
-        console.log(operationalLayersURL);
         return operationalLayersURL;
     }
 

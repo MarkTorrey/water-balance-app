@@ -528,6 +528,21 @@ span.with-unit::after {
     }
 }
 
+@media (max-width: 667px){ 
+
+    .bottom-pane > div.summary-info-wrapper {
+        width: 95%;
+    }
+
+    .bottom-pane > div.monthly-trend-chart-wrapper {
+        display: none;
+    }
+
+    .bottom-pane > div.line-chart-wrapper {
+        display: none;
+    }
+}
+
 /* style of the d3 chart */
 .axis path,
 .axis line {
