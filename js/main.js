@@ -436,21 +436,13 @@ require([
     function MainChart(data){
 
         var containerID = ".line-chart-div";
-
         var container = $(containerID);
-
         container.empty();
-
         $(".tooltip").remove();
 
-        // console.log(data);
-
         var timeFormat = d3.time.format("%Y");
-
         var timeFormatWithMonth = d3.time.format("%b %Y");
-
         var timeFormatFullMonthName = d3.time.format("%B");
-
         var timeFormatMulti = d3.time.format.multi([
             [".%L", function(d) { return d.getMilliseconds(); }],
             [":%S", function(d) { return d.getSeconds(); }],
@@ -1067,7 +1059,7 @@ require([
 
             var aveToAbsMaxValue = aveChangeInStorage / (absMaxValue * 1.05);
 
-            $(".scale-chart-normal-value-text > span").text("Normal")
+            // $(".scale-chart-normal-value-text > span").text("Normal");
 
             setHorizontalPosition("scale-chart-rect", "scale-chart-tooltip", ratioToAbsMaxValue);
 
@@ -1379,12 +1371,12 @@ require([
 
             if(containerSize <= 900){
                 xScaleDomainByWindowSize = [uniqueTimeValues[uniqueTimeValues.length - 61], uniqueTimeValues[uniqueTimeValues.length - 1]];
-                // zoom.x(xScale).scaleExtent([1, 10]);
             } else {
+                // var xScaleDomainStart = +moment(xScaleDomain[0]).subtract(1, "months").valueOf();
+                // var xScaleDomainEnd = +moment(xScaleDomain[1]).add(1, "months").valueOf();
+                // xScaleDomainByWindowSize = [xScaleDomainStart, xScaleDomainEnd];
                 xScaleDomainByWindowSize = xScaleDomain;
-                // zoom.x(xScale).scaleExtent([1, 20]);
             }
-
             return xScaleDomainByWindowSize;
         }
 

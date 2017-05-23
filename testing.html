@@ -1,74 +1,77 @@
+
 <!DOCTYPE html>
-<html>
-<head>
-    <title>Testing</title>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width">
+<style>
 
-    <link rel="icon" href="//www.esri.com/favicon.ico">
-    <link rel="stylesheet" href="https://s3-us-west-1.amazonaws.com/patterns.esri.com/files/calcite-web/1.0.0-rc.3/css/calcite-web.min.css">
-    <link rel="stylesheet" href="//js.arcgis.com/3.16/esri/themes/calcite/dijit/calcite.css">
-    <link rel="stylesheet" href="//js.arcgis.com/3.16/esri/themes/calcite/esri/esri.css">
+html,
+body {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
 
-    <style>
-        .wrapper {
-            width: 200px;
-            height: 50px;
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            background-color: #909090;
+svg {
+  position: absolute;
+}
+
+</style>
+<body>
+<script src="//d3js.org/d3.v3.min.js"></script>
+<script>
+
+    var width = self.frameElement ? 960 : innerWidth,
+        height = self.frameElement ? 500 : innerHeight;
+
+    var data = d3.range(20).map(function() { return [Math.random() * width, Math.random() * height]; });
+
+    var color = d3.scale.category10();
+
+    var drag = d3.behavior.drag()
+        .origin(function(d) { return {x: d[0], y: d[1]}; })
+        .on("drag", dragged);
+
+    d3.select("body")
+        .on("touchstart", nozoom)
+        .on("touchmove", nozoom)
+    .append("svg")
+        .attr("width", width)
+        .attr("height", height)
+    .selectAll("circle")
+        .data(data)
+    .enter().append("circle")
+        .attr("transform", function(d) { return "translate(" + d + ")"; })
+        .attr("r", 32)
+        .style("fill", function(d, i) { return color(i); })
+        .on("click", clicked)
+        .call(drag);
+
+    function dragged(d) {
+        d[0] = d3.event.x, 
+        d[1] = d3.event.y;
+        if(this.nextSibling) {
+            this.parentNode.appendChild(this);
         }
+        d3.select(this).attr("transform", "translate(" + d + ")");
 
-        select {
-            font-size: 14px;
-            height: 3rem;
-            line-height: 3rem;
-            width: 90%;
-            margin: auto;
-            color: #505050;
-        }
+        console.log("dragged");
+    }
 
-    </style>
+    function clicked(d, i) {
+        if (d3.event.defaultPrevented) return; 
 
-    <script>
-        var locationPath = location.origin + location.pathname.replace(/\/[^/]+$/, '');
-        var dojoConfig = {
-            parseOnLoad: true,
-            packages: [
-                {
-                    "name": "app_modules",
-                    "location": locationPath + '/js/modules'
-                },
-                {
-                    "name": "configs",
-                    "location": locationPath + '/js/configs'
-                },                
-            ]
-        };
-    </script>   
+        d3.select(this).transition()
+            .style("fill", "black")
+            .attr("r", 64)
+            .transition()
+            .attr("r", 32)
+            .style("fill", color(i));
 
-    <script src="//code.jquery.com/jquery-1.12.0.min.js"></script>
-    <script src="//d3js.org/d3.v3.min.js"></script>
-    <!--<script src="https://js.arcgis.com/3.16/"></script>-->
-    
-    
-</head>
+        console.log("clicked");
+    }
 
-<body class="calcite">
-    
-    <div class="wrapper">
-        <select class="modifier-class">
-            <option value="">Menu 1</option>
-            <option value="">Menu 2</option>
-            <option value="">Menu 3</option>
-            <option value="">Menu 4</option>
-        </select>
-    </div>
+    function nozoom() {
+        d3.event.preventDefault();
+    }
 
-</body>
-</html>
+</script>
