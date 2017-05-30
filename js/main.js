@@ -1535,7 +1535,7 @@ require([
         $(".tooltip-monthly-trend-chart").remove();
 
         // Set the dimensions of the canvas / graph
-        var margin = {top: 15, right: 0, bottom: 20, left: 20};
+        var margin = {top: 15, right: 10, bottom: 20, left: 20};
         var width = container.width() - margin.left - margin.right;
         var height = container.height() - margin.top - margin.bottom;
 
@@ -1551,11 +1551,11 @@ require([
 
         var xScale = d3.scale.ordinal()
             .domain(uniqueYearValues)
-            .rangeRoundBands([margin.left, width], 1);
+            .rangeRoundBands([margin.left, width - margin.right], 1);
 
         var xScaleForMonthlyNormals = d3.scale.ordinal()
             .domain(uniqueMonthValues)
-            .rangeRoundBands([margin.left, width], 1);
+            .rangeRoundBands([margin.left, width - margin.right], 1);
 
         var yScale = d3.scale.linear()
             .range([height - margin.top, 0])
@@ -1582,7 +1582,7 @@ require([
             
         var yAxis = d3.svg.axis()
             .scale(yScale)
-            .innerTickSize(-(width - margin.left))
+            .innerTickSize(-(width - margin.left - margin.right))
             .ticks(6)
             .tickPadding(5)
             .orient("left");
@@ -1758,18 +1758,8 @@ require([
             .attr("class", "overlay")
             .attr("width", width)
             .attr("height", height)
-            .on("mouseover", function() { 
-                verticalLine.style("display", null); 
-
-                tooltipGroupForXValue.style("display", null);
-                tooltipGroupForYValue.style("display", null);
-            })
-            .on("mouseout", function() { 
-                verticalLine.style("display", "none"); 
-
-                tooltipGroupForXValue.style("display", "none");
-                tooltipGroupForYValue.style("display", "none");
-            })
+            .on("mouseover", toggleTootip(true))
+            .on("mouseout", toggleTootip(false))
             .on("mousemove", mousemove);
 
         function mousemove(){
@@ -1809,6 +1799,16 @@ require([
                 chartDataByLayerTypeAndMonth = chartDataByLayerType.values;
             }
 
+            if(monthSelectValue !== "MonthlyNormals"){
+
+                if(!chartDataByLayerTypeAndMonth.values[xI]){
+                    toggleTootip(false);
+                    return;
+                } else {
+                    toggleTootip(true);
+                }
+            }
+
             var xValueByMousePos = (monthSelectValue === "MonthlyNormals") ?
                                     chartDataByLayerTypeAndMonth[xI].key.substring(0, 3) :
                                     (monthSelectValue === "Annual") ? "20" + chartDataByLayerTypeAndMonth.values[xI].year : "20" + chartDataByLayerTypeAndMonth.values[xI].year +  " " + chartDataByLayerTypeAndMonth.values[xI].month.substring(0, 3); 
@@ -1828,6 +1828,18 @@ require([
             tooltipGroupForYValue.attr("transform", function () {
                 return "translate(" + (xI <= 7 ? tickPos[xI] + 2 : tickPos[xI] - tooltipWrapperRectForYValueWidth - 2) + ", " + (yScale(yValueByMousePos) - tooltipWrapperRectHeight / 2) + ")";
             });  
+        }
+
+        function toggleTootip(isVisible){
+            if(isVisible){
+                verticalLine.style("display", null); 
+                tooltipGroupForXValue.style("display", null);
+                tooltipGroupForYValue.style("display", null);
+            } else {
+                verticalLine.style("display", "none"); 
+                tooltipGroupForXValue.style("display", "none");
+                tooltipGroupForYValue.style("display", "none");
+            }
         }
 
         this.updateChartScale = function(){
