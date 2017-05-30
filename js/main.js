@@ -163,6 +163,8 @@ require([
         }
 
         function requestErrorHandler(error){
+            domClass.remove(document.body, "app-loading");
+            showErrorMessageDialog(); 
             console.log("Error: ", error.message);
         }
 
@@ -240,7 +242,8 @@ require([
             } else {
                 console.log("no data found for this location");
                 domClass.remove(document.body, "app-loading");
-                $(".app-message-wrapper").addClass("show");
+                // $(".app-message-wrapper").addClass("show");
+                showErrorMessageDialog(true); 
                 return;
             }
         });
@@ -433,6 +436,18 @@ require([
         }
     }
 
+    function showErrorMessageDialog(isNoDataFound){
+
+        var errorMessageTitle = isNoDataFound ? "No Data Found!": "Error"
+        var errorMessageContent = isNoDataFound ? "Cannot find any GLDAS data for the selected location. Use a different location and try again." : "The GLDAS Layers cannot be added to the app";
+
+        $(".app-message-title").text(errorMessageTitle);
+        $(".app-message-content").text(errorMessageContent);
+
+        $(".app-message-wrapper").addClass("show");
+    }
+
+
     function MainChart(data){
 
         var containerID = ".line-chart-div";
@@ -442,6 +457,7 @@ require([
 
         var timeFormat = d3.time.format("%Y");
         var timeFormatWithMonth = d3.time.format("%b %Y");
+        var timeFormatWithMonthAndDate = d3.time.format("%Y %b-%d");
         var timeFormatFullMonthName = d3.time.format("%B");
         var timeFormatMulti = d3.time.format.multi([
             [".%L", function(d) { return d.getMilliseconds(); }],
@@ -483,18 +499,14 @@ require([
 
             for (var i = values.length - 1; i >= 0; i--) {
                 tmp = +values[i][key];
-
                 if (tmp < lowest) {
                     lowest = +tmp;
                 }
-
                 if (tmp > highest) {
                     highest = +tmp;
                 }
             }
-
             domain.push(lowest, Math.ceil(highest));
-
             return domain;
         }
 
@@ -585,10 +597,6 @@ require([
             })
             .interpolate("cardinal"); //interpolate the straight lines into curve lines
 
-        // var barWidth = Math.floor((width/precipData[0].values.length) * 0.8);
-
-        // barWidth = (!barWidth) ? 0.5 : barWidth;
-
         var barWidth = getBarChartWidth();
 
         var bars = svg.selectAll("bar")
@@ -599,6 +607,7 @@ require([
             .style("opacity", 0.7)
             .attr("x", function(d) { 
                 // console.log(d);
+                // return xScale(d.stdTime) - barWidth/2; 
                 return xScale(d.stdTime) - barWidth/2; 
             })
             .attr("width", barWidth)
@@ -629,7 +638,6 @@ require([
             .attr('stroke-width', 2)
             .attr('fill', 'none');  
 
-        
         snowpackData = snowpackData[0].values.map(function(d){
             d.key = "Snowpack";
             return d;
@@ -808,22 +816,13 @@ require([
         }
 
         function getBarChartWidth(){
-
             var currentZoomExtentMin = xScale.invert(0);
             var currentZoomExtentMax = xScale.invert(width);
-
             var uniqueTimeValuesInZoomExtent = uniqueTimeValues.filter(function(d){
                 var formatedTimeValue = new Date(d);
                 return formatedTimeValue >= currentZoomExtentMin && formatedTimeValue <= currentZoomExtentMax;
             });
-
-            // var newBarWidth = Math.floor((width/uniqueTimeValuesInZoomExtent.length) * 0.8);
-
-            var newBarWidth = (width/uniqueTimeValuesInZoomExtent.length) * 0.7;
-
-            // newBarWidth = (!newBarWidth) ? 0.5 : newBarWidth;
-
-            return newBarWidth;
+            return (width/uniqueTimeValuesInZoomExtent.length) * 0.7;
         }
 
         function dragmove(d){
@@ -886,7 +885,7 @@ require([
 
             tooltipData.sort(function(a, b){
                 return b.value - a.value;
-            })
+            });
 
             tooltipData.forEach(function(d){
                 var textColor = (d.key === "Snowpack") ? "#909090": getColorByKey(d.key);
@@ -1154,7 +1153,6 @@ require([
             var descText = descTextElements.join(" ") + " " + descText1;
 
             $(".summary-desc-text-div > span").text(descText);
-
         }
         
         this.toggleChartViews = function(){
