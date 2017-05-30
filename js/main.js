@@ -1758,8 +1758,12 @@ require([
             .attr("class", "overlay")
             .attr("width", width)
             .attr("height", height)
-            .on("mouseover", toggleTootip(true))
-            .on("mouseout", toggleTootip(false))
+            .on("mouseover", function(){
+                toggleTootip(true);
+            })
+            .on("mouseout", function(){
+                toggleTootip(false);
+            })
             .on("mousemove", mousemove);
 
         function mousemove(){
@@ -1839,6 +1843,7 @@ require([
                 verticalLine.style("display", "none"); 
                 tooltipGroupForXValue.style("display", "none");
                 tooltipGroupForYValue.style("display", "none");
+                console.log
             }
         }
 
