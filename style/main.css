@@ -17,6 +17,10 @@ html, body {
     padding: 0; 
 }
 
+#mapDiv.narrow { 
+    bottom: 300px;
+}
+
 .navbar-fixed-top {
     height: 50px;
     border: 0;

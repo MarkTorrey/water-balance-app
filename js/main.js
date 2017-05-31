@@ -403,10 +403,13 @@ require([
 
     function toggleBottomPane(isVisible){
         var bottomPane = $(".bottom-pane");
+        var mapPane = $("#mapDiv");
         if(isVisible){
             bottomPane.addClass("visible");
+            mapPane.addClass("narrow");
         } else {
             bottomPane.removeClass("visible");
+            mapPane.removeClass("narrow");
         }
     }
 
@@ -1154,20 +1157,24 @@ require([
 
             $(".summary-desc-text-div > span").text(descText);
         }
-        
+
         this.toggleChartViews = function(){
 
             var selectedMapLayerName = $(".map-layer-select").val();
+
+            // var barWidth = getBarChartWidth();
             
             this.unhighlightChartItems();
 
             if(app.isWaterStorageChartVisible){
                 yScale.domain([0, d3.max(areaChartData, function(d) { return d.y0 + d.y; })]);
+                // xScale.range([0, width - margin.right - xAxisWidthOffset]);
                 areas.style("opacity", ".8");
                 lines.style("opacity", "0");
                 bars.style("opacity", "0");
             } else {
                 yScale.domain(getDomainFromData(precipData[0].values.concat(runoffData[0].values, evapoData[0].values), "value"));
+                // xScale.range([barWidth, width - margin.right - xAxisWidthOffset - barWidth]);
                 areas.style("opacity", "0");
                 lines.style("opacity", ".8");
                 bars.style("opacity", ".8");
@@ -1175,6 +1182,9 @@ require([
 
             yAxisG.transition().duration(1000).ease("sin-in-out")
                 .call(yAxis);  
+
+            xAxisG.transition().duration(1000).ease("sin-in-out")
+                .call(xAxis);  
 
             lines.transition().duration(1000).attr('d', function(d){
                 return createLine(d.values);
@@ -1185,12 +1195,16 @@ require([
             });
 
             bars.transition().duration(1000)
-            .attr("y", function(d) { 
-                return yScale(d.value); 
-            })
-            .attr("height", function(d) { 
-                return height - margin.top - yScale(d.value); 
-            });
+                .attr("y", function(d) { 
+                    return yScale(d.value); 
+                })
+                // .attr("x", function(d) { 
+                //     return xScale(d.stdTime) - barWidth/2; 
+                // })
+                // .attr("width", barWidth)
+                .attr("height", function(d) { 
+                    return height - margin.top - yScale(d.value); 
+                });
 
             if(!app.isWaterStorageChartVisible){
                 var visibleLineFeatureKey;
@@ -1216,6 +1230,8 @@ require([
                     } 
                 });
             }
+
+            // setHighlightRefLineByTime(highlightTimeValue);
         }
 
         this.highlightChartItemByLegendValue = function(legendValue){
@@ -1390,8 +1406,6 @@ require([
 
             return scaleExtent;
         }
-
-
 
         updateMapAndChartByTime(highlightTimeValue, true);
 
