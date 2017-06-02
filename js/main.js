@@ -236,7 +236,9 @@ require([
 
         imageServiceIdentifyTask.execute(imageServiceIdentifyTaskParams).then(function(response) {
 
-            if(response.value !== "NoData"){
+            console.log(imageServiceTitle, response.value);
+
+            if(response.value !== "NoData" || imageServiceTitle === "Snowpack"){
                 var processedResults = processIdentifyTaskResults(response, imageServiceTitle);
                 deferred.resolve(processedResults);
             } else {
