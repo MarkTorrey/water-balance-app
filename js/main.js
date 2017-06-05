@@ -130,6 +130,24 @@ require([
         $(this).removeClass("show");
     }); 
 
+    $(".scale-chart-rect").on("mouseover", function(){
+        toggleSummaryInfoTooltip(true);
+    });
+
+    $(".scale-chart-rect").on("mouseout", function(){
+        toggleSummaryInfoTooltip(false);
+    });
+
+    // $("span.change-in-storage-value").on("mouseover", function(){
+    //     toggleSummaryInfoTooltip(true);
+    //     console.log("mouseover bar");
+    // });
+
+    // $("span.change-in-storage-value").on("mouseout", function(){
+    //     toggleSummaryInfoTooltip(false);
+    //     console.log("mouseout bar");
+    // });
+
     $(window).resize(function() {
         if(app.mainChart){
             app.mainChart.resize();
@@ -452,6 +470,13 @@ require([
         $(".app-message-wrapper").addClass("show");
     }
 
+    function toggleSummaryInfoTooltip(isVisible){
+        if(isVisible){
+            $("div.summary-info-tooltip").show();
+        } else {
+            $("div.summary-info-tooltip").hide();
+        }
+    }
 
     function MainChart(data){
 
@@ -1139,7 +1164,7 @@ require([
             }
 
             var descTextElements = [ 
-                absValueOfChangeInStorage + "mm",
+                "<a class='change-in-storage-value'>" + absValueOfChangeInStorage + "mm</a>",
                 "of water was",
                 addedOrLost,
                 "storage this month."
@@ -1157,7 +1182,17 @@ require([
 
             var descText = descTextElements.join(" ") + " " + descText1;
 
-            $(".summary-desc-text-div > span").text(descText);
+            // $(".summary-desc-text-div > span").text(descText);
+
+            $(".summary-desc-text-div").html("<psan>" + descText + "</span>");
+
+            $("a.change-in-storage-value").on("mouseover", function(){
+                toggleSummaryInfoTooltip(true);
+            });
+
+            $("a.change-in-storage-value").on("mouseout", function(){
+                toggleSummaryInfoTooltip(false);
+            });
         }
 
         this.toggleChartViews = function(){

@@ -301,6 +301,22 @@ div.summary-info-wrapper > div.scale-chart-wrapper {
     /*margin-top: 10px;*/
 }
 
+div.summary-info-wrapper > div.summary-info-tooltip {
+    position: absolute;
+    top: 110px;
+    left: 20px;
+    width: 230px;	
+    height: 50px;		
+    padding: 5px;	
+    background: #333;
+    color: #fff;
+    box-shadow: 3px 3px 15px rgba(50, 50, 50, 0.3);
+    border: 0px;					
+    border-radius: 2px;
+    z-index: 1000;
+    display: none;
+}
+
 div.scale-chart-wrapper > div.scale-chart-label {
     height: 15px;
 }
@@ -357,6 +373,10 @@ div.scale-chart-rect > div.scale-chart-tooltip {
     height: 100%;
     display: inline-block;
     /*background-color: rgba(0, 0, 0, .3);*/
+}
+
+.change-in-storage-value {
+    cursor: pointer;
 }
 
 div.scale-chart-tooltip > div.scale-chart-tooltip-line {
