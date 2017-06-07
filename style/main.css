@@ -303,10 +303,10 @@ div.summary-info-wrapper > div.scale-chart-wrapper {
 
 div.summary-info-wrapper > div.summary-info-tooltip {
     position: absolute;
-    top: 110px;
+    top: 115px;
     left: 20px;
-    width: 230px;	
-    height: 50px;		
+    width: 250px;	
+    /*height: 50px;		*/
     padding: 5px;	
     background: #333;
     color: #fff;
@@ -587,15 +587,26 @@ div.tooltip {
     font: 12px sans-serif;	
     position: absolute;	
     text-align: left;	
-    width: 165px;	
-    height: 50px;		
-    padding: 5px;	
+    /*width: 165px;	
+    height: 55px;		*/
+    padding: 5px 8px;	
     background: rgba(250, 250, 250, 0.9);	
     box-shadow: 3px 3px 7px rgba(50, 50, 50, 0.3);
     border: 0px;					
     border-radius: 2px;
     z-index: 1000;
+    border: 1px solid #d1d1d1;
+    line-height: 16px;
 }   
+
+div.tooltip > span.main-chart-tooltip-header {
+    font-weight: 600;
+    font-size: 12px;
+}
+
+div.tooltip > hr {
+    margin: 5px 0;
+}
 
 .overlay {
     fill: none;

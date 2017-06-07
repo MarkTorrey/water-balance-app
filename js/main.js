@@ -138,16 +138,6 @@ require([
         toggleSummaryInfoTooltip(false);
     });
 
-    // $("span.change-in-storage-value").on("mouseover", function(){
-    //     toggleSummaryInfoTooltip(true);
-    //     console.log("mouseover bar");
-    // });
-
-    // $("span.change-in-storage-value").on("mouseout", function(){
-    //     toggleSummaryInfoTooltip(false);
-    //     console.log("mouseout bar");
-    // });
-
     $(window).resize(function() {
         if(app.mainChart){
             app.mainChart.resize();
@@ -254,8 +244,6 @@ require([
 
         imageServiceIdentifyTask.execute(imageServiceIdentifyTaskParams).then(function(response) {
 
-            console.log(imageServiceTitle, response.value);
-
             if(response.value !== "NoData" || imageServiceTitle === "Snowpack"){
                 var processedResults = processIdentifyTaskResults(response, imageServiceTitle);
                 deferred.resolve(processedResults);
@@ -335,10 +323,7 @@ require([
     }
 
     function addPointToMAp(geometry){
-
         app.map.graphics.clear();
-
-        // Create a symbol for drawing the point
         var markerSymbol = new SimpleMarkerSymbol(
             SimpleMarkerSymbol.STYLE_CIRCLE, 
             12, 
@@ -349,10 +334,7 @@ require([
             ),
             new Color([207, 34, 171, 0.8])
         );
-
-        // Create a graphic and add the geometry and symbol to it
         var pointGraphic = new Graphic(geometry, markerSymbol);
-
         app.map.graphics.add(pointGraphic);
     }
 
@@ -798,7 +780,7 @@ require([
             })
             .on("mousemove", mousemove)
             .on('click', function(){
-                if (d3.event.defaultPrevented) return; // zoomed
+                if (d3.event.defaultPrevented) return; // zoomed                
                 highlightTimeValue = currentTimeValueByMousePosition;
                 updateMapAndChartByTime(highlightTimeValue);
             })
@@ -893,7 +875,7 @@ require([
 
             var tooltipData = getChartDataByTime(closestTimeValue);
 
-            var tooltipContent = '<b>' + timeFormatWithMonth(new Date(closestTimeValue)) + '</b><br>';
+            var tooltipContent = '<span class="main-chart-tooltip-header">' + timeFormatWithMonth(new Date(closestTimeValue)) + '</span><hr>';
 
             var tooltipX = (mousePositionX > prevMouseXPosition) ? d3.event.pageX - 175 : (d3.event.pageX + 175 < container.width()) ?  d3.event.pageX + 10 : d3.event.pageX - 175;
 
@@ -1182,9 +1164,13 @@ require([
 
             var descText = descTextElements.join(" ") + " " + descText1;
 
+            var summaryInfoTooltipText = "<b>" + changeInStorageValue + "mm</b>" + " (change in storage is precipitation minus runoff and evapotranspiration)."
+
             // $(".summary-desc-text-div > span").text(descText);
 
-            $(".summary-desc-text-div").html("<psan>" + descText + "</span>");
+            $(".summary-desc-text-div").html("<span>" + descText + "</span>");
+
+            $("div.summary-info-tooltip").html("<span>" + summaryInfoTooltipText + "</span>");
 
             $("a.change-in-storage-value").on("mouseover", function(){
                 toggleSummaryInfoTooltip(true);
