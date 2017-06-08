@@ -1146,7 +1146,7 @@ require([
             }
 
             var descTextElements = [ 
-                "<a class='change-in-storage-value'>" + absValueOfChangeInStorage + "mm</a>",
+                "<span class='change-in-storage-value'>" + absValueOfChangeInStorage + " mm</span>",
                 "of water was",
                 addedOrLost,
                 "storage this month."
@@ -1164,7 +1164,9 @@ require([
 
             var descText = descTextElements.join(" ") + " " + descText1;
 
-            var summaryInfoTooltipText = "<b>" + changeInStorageValue + "mm</b>" + " (change in storage is precipitation minus runoff and evapotranspiration)."
+            // var summaryInfoTooltipText = "<b>" + changeInStorageValue + "mm</b>" + " (change in storage is precipitation minus runoff and evapotranspiration)."
+
+            var summaryInfoTooltipText = "Change in storage is precipitation minus runoff and evapotranspiration."
 
             // $(".summary-desc-text-div > span").text(descText);
 
@@ -1172,11 +1174,15 @@ require([
 
             $("div.summary-info-tooltip").html("<span>" + summaryInfoTooltipText + "</span>");
 
-            $("a.change-in-storage-value").on("mouseover", function(){
+            if(changeInStorageValue >= 0){
+                $(".change-in-storage-value").addClass("scale-chart-blue");
+            }
+
+            $(".change-in-storage-value").on("mouseover", function(){
                 toggleSummaryInfoTooltip(true);
             });
 
-            $("a.change-in-storage-value").on("mouseout", function(){
+            $(".change-in-storage-value").on("mouseout", function(){
                 toggleSummaryInfoTooltip(false);
             });
         }

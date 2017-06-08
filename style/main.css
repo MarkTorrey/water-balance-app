@@ -293,8 +293,20 @@ div.summary-info-wrapper > div.summary-table-wrapper > div {
     border-bottom: solid 0.1px #e9e9e9;
 }
 
+div.summary-info-wrapper > div.summary-table-wrapper > div > span.with-unit {
+    font-weight: 600;
+}
+
 div.summary-info-wrapper > div.summary-desc-text-div {
     margin-top: 25px;
+}
+
+span.scale-chart-blue {
+    color: #2166ac;
+}
+
+span.scale-chart-red {
+    color: #b2182b;
 }
 
 div.summary-info-wrapper > div.scale-chart-wrapper {
@@ -377,7 +389,13 @@ div.scale-chart-rect > div.scale-chart-tooltip {
 
 .change-in-storage-value {
     cursor: pointer;
+    color: #b2182b;
+    font-weight: 600;
 }
+
+/*.change-in-storage-value.recharge {
+    color: #2166ac;
+}*/
 
 div.scale-chart-tooltip > div.scale-chart-tooltip-line {
     margin: 0 auto;
@@ -394,6 +412,7 @@ div.scale-chart-tooltip > div.scale-chart-tooltip-text {
     width: auto;
     /*background-color: rgba(255, 255, 255, 0.3);*/
     margin-left: 10px;
+    display: none;
 }
 
 .bottom-pane > div.monthly-trend-chart-wrapper {
