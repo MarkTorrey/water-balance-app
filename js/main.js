@@ -743,7 +743,7 @@ require([
             .attr("text-anchor", "middle")
             // .text("Jan 2010")
             .style('fill', '#fff')
-            .style("cursor", 'crosshair');
+            .style("cursor", 'pointer');
 
         var zoom = d3.behavior.zoom()
             .x(xScale)
