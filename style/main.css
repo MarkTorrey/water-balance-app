@@ -317,7 +317,7 @@ div.summary-info-wrapper > div.summary-info-tooltip {
     position: absolute;
     top: 115px;
     left: 20px;
-    width: 250px;	
+    /*width: 250px;	*/
     /*height: 50px;		*/
     padding: 5px;	
     background: #333;

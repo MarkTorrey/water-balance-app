@@ -1166,7 +1166,7 @@ require([
 
             // var summaryInfoTooltipText = "<b>" + changeInStorageValue + "mm</b>" + " (change in storage is precipitation minus runoff and evapotranspiration)."
 
-            var summaryInfoTooltipText = "Change in storage is precipitation minus runoff and evapotranspiration."
+            var summaryInfoTooltipText = "Change in storage is precipitation minus <br>runoff and evapotranspiration."
 
             // $(".summary-desc-text-div > span").text(descText);
 
@@ -1751,7 +1751,7 @@ require([
 
         var tooltipWrapperRectHeight = 15;
         var tooltipWrapperRectWidth = 60;
-        var tooltipWrapperRectForYValueWidth = 40;
+        var tooltipWrapperRectForYValueWidth = 50;
 
         var tooltipGroupForXValue = svg.append("g")
             .attr("class", "tooltip-group")
@@ -1785,7 +1785,7 @@ require([
             .attr('height', tooltipWrapperRectHeight)
             .attr("transform", "translate(0, 0)")
             .attr('class', 'tooltip-wrapper-rect')
-            .style('opacity', 0.7)
+            .style('opacity', 0.9)
             .style('fill', '#fff');
 
         var tooltipTextForYValue = tooltipGroupForYValue.append("text")
